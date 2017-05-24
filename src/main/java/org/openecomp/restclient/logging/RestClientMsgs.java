@@ -102,8 +102,13 @@ public enum RestClientMsgs implements LogMessageEnum {
    *    {0} = URL 
    *    {1} - Response code
    */
-  HTTP_RESPONSE;
+  HTTP_RESPONSE,
 
+  /**
+   * . Arguments: 
+   *     {0} = failure cause
+   */
+  CLIENT_INITIALIZATION_FAILURE;
 
   /**
    * Static initializer to ensure the resource bundles for this class are loaded...

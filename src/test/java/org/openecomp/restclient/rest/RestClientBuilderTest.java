@@ -1,17 +1,17 @@
 package org.openecomp.restclient.rest;
 
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.openecomp.restclient.rest.RestClientBuilder;
-
-import static org.junit.Assert.*;
+import org.openecomp.restclient.enums.RestAuthenticationMode;
 
 import com.sun.jersey.api.client.Client;
-
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-
 
 /**
  * This suite of tests is intended to exercise the functionality of the generice REST client
@@ -20,147 +20,231 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 public class RestClientBuilderTest {
 
   /**
-   * This test validates that we can enable and disable certificate chain verification and that the
-   * associated parameters are correctly set.
+   * Test case initialization
+   * 
+   * @throws Exception the exception
    */
+  @Before
+  public void init() throws Exception {
+  }
+  
+  private String generateAuthorizationHeaderValue(String username, String password) {
+    String usernameAndPassword = username + ":" + password;
+    return "Basic " + java.util.Base64.getEncoder().encodeToString(usernameAndPassword.getBytes());
+  }
+  
   @Test
-  public void certificateChainVerificationTest() throws Exception {
+  public void validateAccesors() {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    // test defaults
+    assertEquals(restClientBuilder.isValidateServerHostname(), RestClientBuilder.DEFAULT_VALIDATE_SERVER_HOST);
+    assertEquals(restClientBuilder.isValidateServerCertChain(), RestClientBuilder.DEFAULT_VALIDATE_CERT_CHAIN);
+    assertEquals(restClientBuilder.getClientCertFileName(), RestClientBuilder.DEFAULT_CLIENT_CERT_FILENAME);
+    assertEquals(restClientBuilder.getClientCertPassword(), RestClientBuilder.DEFAULT_CERT_PASSWORD);
+    assertEquals(restClientBuilder.getTruststoreFilename(), RestClientBuilder.DEFAULT_TRUST_STORE_FILENAME);
+    assertEquals(restClientBuilder.getConnectTimeoutInMs(), RestClientBuilder.DEFAULT_CONNECT_TIMEOUT_MS);
+    assertEquals(restClientBuilder.getReadTimeoutInMs(), RestClientBuilder.DEFAULT_READ_TIMEOUT_MS);
+    assertEquals(restClientBuilder.getAuthenticationMode(), RestClientBuilder.DEFAULT_AUTH_MODE);
+    assertEquals(restClientBuilder.getBasicAuthUsername(), RestClientBuilder.DEFAULT_BASIC_AUTH_USERNAME);
+    assertEquals(restClientBuilder.getBasicAuthPassword(), RestClientBuilder.DEFAULT_BASIC_AUTH_PASSWORD);
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.UNKNOWN_MODE);
+    restClientBuilder.setBasicAuthPassword("password");
+    restClientBuilder.setBasicAuthUsername("username");
+    restClientBuilder.setClientCertFileName("filename");
+    restClientBuilder.setClientCertPassword("password");
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setTruststoreFilename("truststore");
+    restClientBuilder.setValidateServerCertChain(true);
+    restClientBuilder.setValidateServerHostname(true);
+    
+    assertEquals(restClientBuilder.isValidateServerHostname(), true);
+    assertEquals(restClientBuilder.isValidateServerCertChain(), true);
+    assertEquals(restClientBuilder.getClientCertFileName(), "filename");
+    assertEquals(restClientBuilder.getClientCertPassword(), "password");
+    assertEquals(restClientBuilder.getTruststoreFilename(), "truststore");
+    assertEquals(restClientBuilder.getConnectTimeoutInMs(), 12345);
+    assertEquals(restClientBuilder.getReadTimeoutInMs(), 54321);
+    assertEquals(restClientBuilder.getAuthenticationMode(), RestAuthenticationMode.UNKNOWN_MODE);
+    assertEquals(restClientBuilder.getBasicAuthUsername(), "username");
+    assertEquals(restClientBuilder.getBasicAuthPassword(), "password");
+    
+    assertEquals(restClientBuilder.getBasicAuthenticationCredentials(),
+        generateAuthorizationHeaderValue("username", "password"));
 
-    final String TRUST_STORE_FILENAME = "myTrustStore";
+    assertTrue(restClientBuilder.toString().contains("RestClientBuilder"));
 
+  }
+  
+  @Test
+  public void validateNoAuthClientCreation() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.HTTP_NOAUTH);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    
+    Client client = restClientBuilder.getClient();
+    assertNotNull(client);
+    assertNull(client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES));
+  }
+  
+  
+  @Test
+  public void validateUnknownModeCreateNoAuthClient() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.UNKNOWN_MODE);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    
+    Client client = restClientBuilder.getClient();
+    assertNotNull(client);
+    assertNull(client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES));
+  }
 
-    // Instantiate a RestClientBuilder with default parameters and
-    // get a client instance.
-    RestClientBuilder builder = new RestClientBuilder();
-    Client client = builder.getClient();
-
-    // Validate that, by default, no trust store has been set.
-    assertNull("Trust store filename should not be set for default builder",
-        System.getProperty("javax.net.ssl.trustStore"));
-
-    // Now, enable certificate chain verification, but don't specify
-    // a trust store filename.
-    builder.setValidateServerCertChain(true);
-
-    // Now, get a new client instance. We expect the builder to complain
-    // because there is no trust store filename.
-    try {
-      Client client2 = builder.getClient();
-      fail("Expected exception due to no trust store filename.");
-
-    } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("Trust store filename must be set"));
+  @Test
+  public void validateBasicAuthSslClient() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_BASIC);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setBasicAuthUsername("username");
+    restClientBuilder.setBasicAuthPassword("password");
+    
+    Client client = restClientBuilder.getClient();
+   
+    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+    HTTPSProperties sslProps = null;
+    if ( sslPropertiesObj instanceof HTTPSProperties ) {
+      sslProps = (HTTPSProperties)sslPropertiesObj;
+      assertNotNull(sslProps.getHostnameVerifier());
+    } else {
+      fail("Unexpected value for https properties object");
     }
-
-    // Now, set a value for the trust store filename and try again to
-    // get a client instance. This time it should succeed and we should
-    // see that our trust name filename was set.
-    builder.setTruststoreFilename(TRUST_STORE_FILENAME);
-    Client client3 = builder.getClient();
-
-    // Validate that the trust store filename was set.
-    assertNotNull("Expected trust store filename to be set",
-        System.getProperty("javax.net.ssl.trustStore"));
-
-    // Validate that the filename is set to the value we specified.
-    assertTrue(
-        "Unexpected trust store filename value " + System.getProperty("javax.net.ssl.trustStore"),
-        System.getProperty("javax.net.ssl.trustStore").equals(TRUST_STORE_FILENAME));
+    
   }
 
-
-  /**
-   * This test validates that we can set timeout values in our client builder and that those values
-   * are reflected in the client produced by the builder.
-   */
   @Test
-  public void timeoutValuesTest() throws Exception {
-
-    // Instantiate a RestClientBuilder with default parameters.
-    RestClientBuilder builder = new RestClientBuilder();
-
-    // Now, get a client instance and retrieve the client properties.
-    Client client = builder.getClient();
-
-    Map<String, Object> props = client.getProperties();
-
-    // Validate that the connection and read timeouts are set to the
-    // default values.
-    assertEquals("Unexpected connect timeout parameter",
-        props.get("com.sun.jersey.client.property.connectTimeout"),
-        RestClientBuilder.DEFAULT_CONNECT_TIMEOUT_MS);
-    assertEquals("Unexpected read timeout parameter",
-        props.get("com.sun.jersey.client.property.readTimeout"),
-        RestClientBuilder.DEFAULT_READ_TIMEOUT_MS);
-
-    // Now, change the timeouts in the builder to non-default values.
-    builder.setConnectTimeoutInMs(RestClientBuilder.DEFAULT_CONNECT_TIMEOUT_MS + 100);
-    builder.setReadTimeoutInMs(RestClientBuilder.DEFAULT_READ_TIMEOUT_MS + 100);
-
-    // Retrieve a new client instance and get the client properties.
-    Client client2 = builder.getClient();
-    props = client2.getProperties();
-
-    // Validate that the connection and read timeouts are set to the
-    // new values.
-    assertEquals("Unexpected connect timeout parameter",
-        props.get("com.sun.jersey.client.property.connectTimeout"),
-        RestClientBuilder.DEFAULT_CONNECT_TIMEOUT_MS + 100);
-    assertEquals("Unexpected read timeout parameter",
-        props.get("com.sun.jersey.client.property.readTimeout"),
-        RestClientBuilder.DEFAULT_READ_TIMEOUT_MS + 100);
-  }
-
-
-  /**
-   * This test validates that we can enable and disable host name verification in the clients
-   * produced by our builder.
-   */
+  public void validateSslCertClient_noHostOrCertChainValidation() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setValidateServerCertChain(false);
+    restClientBuilder.setValidateServerHostname(false);
+    
+    Client client = restClientBuilder.getClient();
+   
+    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+    HTTPSProperties sslProps = null;
+    if ( sslPropertiesObj instanceof HTTPSProperties ) {
+      sslProps = (HTTPSProperties)sslPropertiesObj;
+      assertNotNull(sslProps.getHostnameVerifier());
+    } else {
+      fail("Unexpected value for https properties object");
+    }  }
+  
   @Test
-  public void hostNameVerifierTest() throws Exception {
-
-    // Instantiate a RestClientBuilder with default parameters.
-    RestClientBuilder builder = new RestClientBuilder();
-
-    // Now, get a client instance.
-    Client client1 = builder.getClient();
-
-    // Retrieve the client's HTTPS properties.
-    HTTPSProperties httpProps = getHTTPSProperties(client1);
-
-    // By default, hostname verification should be disabled, which means
-    // that our builder will have injected its own {@link HostnameVerifier}
-    // which just always returns true.
-    assertNotNull(httpProps.getHostnameVerifier());
-
-    // Verify that the host name verifier returns true regardless of what
-    // hostname we pass in.
-    assertTrue("Default hostname verifier should always return true",
-        httpProps.getHostnameVerifier().verify("not_a_valid_hostname", null));
-
-
-    // Now, enable hostname verification for our client builder, and
-    // get a new client.
-    builder.setValidateServerHostname(true);
-    Client client2 = builder.getClient();
-
-    // Retrieve the client's HTTPS properties.
-    httpProps = getHTTPSProperties(client2);
-
-    // Verify that with hostname verification enabled, our builder did not
-    // insert its own stubbed verifier.
-    assertNull(httpProps.getHostnameVerifier());
+  public void validateSslCertClient_hostOnlyValidation() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setValidateServerCertChain(false);
+    restClientBuilder.setValidateServerHostname(true);
+    
+    Client client = restClientBuilder.getClient();
+   
+    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+    HTTPSProperties sslProps = null;
+    if ( sslPropertiesObj instanceof HTTPSProperties ) {
+      sslProps = (HTTPSProperties)sslPropertiesObj;
+      assertNull(sslProps.getHostnameVerifier());
+    } else {
+      fail("Unexpected value for https properties object");
+    }
+   }
+  
+  @Test
+  public void validateSslCertClient_certChainOnlyValidation() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setValidateServerCertChain(true);
+    restClientBuilder.setValidateServerHostname(false);
+    restClientBuilder.setTruststoreFilename("truststore");
+    restClientBuilder.setClientCertPassword(null);
+    
+    Client client = restClientBuilder.getClient();
+   
+    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+    HTTPSProperties sslProps = null;
+    if ( sslPropertiesObj instanceof HTTPSProperties ) {
+      sslProps = (HTTPSProperties)sslPropertiesObj;
+      assertNotNull(sslProps.getHostnameVerifier());
+    } else {
+      fail("Unexpected value for https properties object");
+    }
   }
-
-
-  /**
-   * This is a convenience method which extracts the HTTPS properties from a supplied client.
-   *
-   * @parameter aClient - The client to retrieve the HTTPS properties from.
-   */
-  private HTTPSProperties getHTTPSProperties(Client aClient) {
-
-    Map<String, Object> props = aClient.getProperties();
-    return (HTTPSProperties) props.get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+  
+  @Test
+  public void validateSslCertClient_withHostAndCertChainValidation() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setValidateServerCertChain(true);
+    restClientBuilder.setValidateServerHostname(true);
+    restClientBuilder.setClientCertPassword("password");
+    restClientBuilder.setTruststoreFilename("truststore");
+    
+    Client client = restClientBuilder.getClient();
+   
+    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
+    HTTPSProperties sslProps = null;
+    if ( sslPropertiesObj instanceof HTTPSProperties ) {
+      sslProps = (HTTPSProperties)sslPropertiesObj;
+      assertNull(sslProps.getHostnameVerifier());
+    } else {
+      fail("Unexpected value for https properties object");
+    }  }
+  
+  @Test (expected=IllegalArgumentException.class)
+  public void validateSslCertClient_illegalArgumentExceptionWhenTruststoreIsNull() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    
+    restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
+    restClientBuilder.setConnectTimeoutInMs(12345);
+    restClientBuilder.setReadTimeoutInMs(54321);
+    restClientBuilder.setValidateServerCertChain(true);
+    restClientBuilder.setValidateServerHostname(true);
+    restClientBuilder.setTruststoreFilename(null);
+    
+    /*
+     * Creating the client in this scenario will cause an IllegalArgumentException caused by the
+     * truststore being null
+     */
+    Client client = restClientBuilder.getClient();
+   
   }
+  
+    
 }

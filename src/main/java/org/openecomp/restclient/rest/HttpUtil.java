@@ -50,7 +50,7 @@ public class HttpUtil {
    * @return true if the response is of the informational class and false otherwise
    */
   public static boolean isHttpResponseClassInformational(int response) {
-    return isExpectedHttpResponseClass(response, '1');
+    return ( response >= 100 && response <= 199);
   }
 
   /**
@@ -60,7 +60,8 @@ public class HttpUtil {
    * @return true if the response is of the success class and false otherwise
    */
   public static boolean isHttpResponseClassSuccess(int response) {
-    return isExpectedHttpResponseClass(response, '2');
+    return ( response >= 200 && response <= 299);
+
   }
 
   /**
@@ -70,7 +71,7 @@ public class HttpUtil {
    * @return true if the response is of the redirection class and false otherwise
    */
   public static boolean isHttpResponseClassRedirection(int response) {
-    return isExpectedHttpResponseClass(response, '3');
+    return ( response >= 300 && response <= 399);
   }
 
   /**
@@ -80,7 +81,7 @@ public class HttpUtil {
    * @return true if the response is of the client error class and false otherwise
    */
   public static boolean isHttpResponseClassClientError(int response) {
-    return isExpectedHttpResponseClass(response, '4');
+    return ( response >= 400 && response <= 499);
   }
 
   /**
@@ -90,26 +91,7 @@ public class HttpUtil {
    * @return true if the response is of the server error class and false otherwise
    */
   public static boolean isHttpResponseClassServerError(int response) {
-    return isExpectedHttpResponseClass(response, '5');
+    return ( response >= 500 && response <= 599);
   }
 
-  /**
-   * Helper method to determine if we have received the response class we are expecting.
-   *
-   * @param response the http response we got from our request
-   * @param expectedClass the expected http response class ie: 1, 2, 3, 4, 5 which maps to 1xx, 2xx,
-   *        3xx, 4xx, 5xx respectively
-   * @return true if the response if of our expected class and false if not
-   */
-  private static boolean isExpectedHttpResponseClass(int response, char expectedClass) {
-    if (response < 100 || response >= 600) {
-      return false;
-    }
-
-    if (Integer.toString(response).charAt(0) == expectedClass) {
-      return true;
-    }
-
-    return false;
-  }
 }
