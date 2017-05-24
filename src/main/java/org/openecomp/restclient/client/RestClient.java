@@ -24,21 +24,6 @@
  */
 package org.openecomp.restclient.client;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-
-import org.openecomp.cl.api.LogFields;
-import org.openecomp.cl.api.LogLine;
-import org.openecomp.cl.api.Logger;
-import org.openecomp.cl.eelf.LoggerFactory;
-import org.openecomp.cl.mdc.MdcContext;
-import org.openecomp.cl.mdc.MdcOverride;
-import org.openecomp.restclient.logging.RestClientMsgs;
-import org.openecomp.restclient.rest.RestClientBuilder;
-
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -46,16 +31,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.openecomp.cl.api.LogFields;
+import org.openecomp.cl.api.LogLine;
+import org.openecomp.cl.api.Logger;
+import org.openecomp.cl.eelf.LoggerFactory;
+import org.openecomp.cl.mdc.MdcContext;
+import org.openecomp.cl.mdc.MdcOverride;
+import org.openecomp.restclient.enums.RestAuthenticationMode;
+import org.openecomp.restclient.logging.RestClientMsgs;
+import org.openecomp.restclient.rest.RestClientBuilder;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.WebResource.Builder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 
 /**
  * This class provides a general client implementation that micro services can use for communicating
  * with the endpoints via their exposed REST interfaces.
+ * 
  */
+
 public class RestClient {
 
   /**
@@ -63,11 +68,9 @@ public class RestClient {
    * communicate with the REST endpoint.
    */
   private RestClientBuilder clientBuilder;
-
-  /**
-   * The low level instance of the REST client that will be used to communicate with the endpoint.
-   */
-  private Client restClient = null;
+  
+  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<String,InitializedClient>();
+  private static final String REST_CLIENT_INSTANCE = "REST_CLIENT_INSTANCE";
 
   /** Standard logger for producing log statements. */
   private Logger logger = LoggerFactory.getInstance().getLogger("AAIRESTClient");
@@ -89,11 +92,20 @@ public class RestClient {
   /** Reusable function call for DELETE REST operations. */
   private final RestOperation deleteOp = new DeleteRestOperation();
 
+  /** Reusable function call for HEAD REST operations. */
+  private final RestOperation headOp = new HeadRestOperation();
+
+  /** Reusable function call for PATCH REST operations. */
+  private final RestOperation patchOp = new PatchRestOperation();
+  
+  
   /**
    * Creates a new instance of the {@link RestClient}.
    */
   public RestClient() {
+    
     clientBuilder = new RestClientBuilder();
+  
   }
 
 
@@ -105,6 +117,27 @@ public class RestClient {
    */
   public RestClient(RestClientBuilder rcBuilder) {
     clientBuilder = rcBuilder;
+  }
+  
+  public RestClient authenticationMode(RestAuthenticationMode mode) {
+    logger.debug("Set rest authentication mode= " + mode);
+    clientBuilder.setAuthenticationMode(mode);
+    return this;
+  }
+  
+  public RestClient basicAuthUsername(String username) {
+    logger.debug("Set SSL BasicAuth username = " + username);
+    clientBuilder.setBasicAuthUsername(username);
+    return this;
+  }
+  
+  public RestClient basicAuthPassword(String password) {
+    /*
+     * purposely not logging out the password, I guess we could obfuscate it if we really want to
+     * see it in the logs
+     */
+    clientBuilder.setBasicAuthPassword(password);
+    return this;
   }
 
 
@@ -160,7 +193,6 @@ public class RestClient {
    * @return The AAIRESTClient instance. This is useful for chaining parameter assignments.
    */
   public RestClient clientCertPassword(String password) {
-    logger.debug("Set client certificate password = " + password);
     clientBuilder.setClientCertPassword(password);
     return this;
   }
@@ -207,6 +239,26 @@ public class RestClient {
     return this;
   }
 
+  private boolean shouldRetry(OperationResult operationResult) {
+
+    if (operationResult == null) {
+      return true;
+    }
+
+    int resultCode = operationResult.getResultCode();
+
+    if (resultCode == 200) {
+      return false;
+    }
+
+    if (resultCode == 404) {
+      return false;
+    }
+
+    return true;
+
+  }
+  
   /**
    * This method operates on a REST endpoint by submitting an HTTP operation request against the
    * supplied URL.    
@@ -232,23 +284,29 @@ public class RestClient {
     long startTimeInMs = System.currentTimeMillis();
     for (int retryCount = 0; retryCount < numRetries; retryCount++) {
 
-      logger.info(RestClientMsgs.HTTP_REQUEST_WITH_RETRIES, url, Integer.toString(retryCount + 1));
-
+      logger.info(RestClientMsgs.HTTP_REQUEST_WITH_RETRIES, operation.getRequestType().toString(),
+          url, Integer.toString(retryCount + 1));
+      
       // Submit our query to the AAI.
       result = processRequest(operation, url, payload, headers, contentType, responseType);
 
       // If the submission was successful then we're done.
-      if (Integer.toString(result.getResultCode()).charAt(0) == '2') {
-        logger.info(RestClientMsgs.HTTP_REQUEST_TIME_WITH_RETRIES,
-            Long.toString(System.currentTimeMillis() - startTimeInMs), url,
+      
+      if (!shouldRetry(result)) {
+        
+        logger.info(RestClientMsgs.HTTP_REQUEST_TIME_WITH_RETRIES, operation.getRequestType().toString(),url,
+            Long.toString(System.currentTimeMillis() - startTimeInMs), 
             Integer.toString(retryCount));
+        
+        result.setNumRetries(retryCount);
+        
         return result;
       }
 
       // Our submission was unsuccessful...
       try {
         // Sleep between re-tries to be nice to the target system.
-        Thread.sleep(500);
+        Thread.sleep(50);
 
       } catch (InterruptedException e) {
         logger.error(RestClientMsgs.HTTP_REQUEST_INTERRUPTED, url, e.getLocalizedMessage());
@@ -257,9 +315,10 @@ public class RestClient {
     }
 
     // If we've gotten this far, then we failed all of our retries.
+    result.setNumRetries(numRetries);
     result.setResultCode(504);
     result.setFailureCause(
-        "Failed to get a successful result " + "after multiple retries to target server");
+        "Failed to get a successful result after multiple retries to target server.");
 
     return result;
   }
@@ -379,7 +438,39 @@ public class RestClient {
       MediaType contentType, MediaType responseType) {
     return processRequest(postOp, url, payload, headers, contentType, responseType);
   }
+  
+  /**
+   * This method submits an HTTP POST request against the supplied URL, and emulates a PATCH
+   * operation by setting a special header value
+   *
+   * @param url - The REST endpoint to submit the POST request to.
+   * @param payload - the payload to send to the supplied URL
+   * @param headers - The headers that should be passed in the request
+   * @param contentType - The content type of the payload
+   * @param responseType - The expected format of the response.
+   *
+   * @return The result of the POST request.
+   */
+  public OperationResult patch(String url, String payload, Map<String, List<String>> headers,
+      MediaType contentType, MediaType responseType) {
+    return processRequest(patchOp, url, payload, headers, contentType, responseType);
+  }
 
+  
+  /**
+   * This method submits an HTTP HEAD request against the supplied URL
+   *
+   * @param url - The REST endpoint to submit the POST request to.
+   * @param headers - The headers that should be passed in the request
+   * @param responseType - The expected format of the response.
+   *
+   * @return The result of the POST request.
+   */
+  public OperationResult head(String url, Map<String, List<String>> headers,
+      MediaType responseType) {
+    return processRequest(headOp, url, null, headers, null, responseType);
+  }
+  
   /**
    * This method submits an HTTP GET request against the supplied URL.
    *
@@ -508,6 +599,12 @@ public class RestClient {
       for (Entry<String, List<String>> header : headers.entrySet()) {
         builder.header(header.getKey(), header.getValue());
       }
+      
+      if (clientBuilder.getAuthenticationMode() == RestAuthenticationMode.SSL_BASIC) {
+        builder = builder.header(Headers.AUTHORIZATION,
+            clientBuilder.getBasicAuthenticationCredentials());
+      }
+      
     }
 
     return builder;
@@ -554,39 +651,58 @@ public class RestClient {
     }
   }
 
-
   /**
    * This method creates an instance of the low level REST client to use for communicating with the
    * AAI, if one has not already been created, otherwise it returns the already created instance.
    *
    * @return A {@link Client} instance.
    */
-  private synchronized Client getClient() throws Exception {
+  protected Client getClient() throws Exception {
 
-    if (restClient == null) {
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Instantiating REST client with following parameters:");
-        logger.debug(
-            "  validate server hostname          = " + clientBuilder.isValidateServerHostname());
-        logger.debug(
-            "  validate server certificate chain = " + clientBuilder.isValidateServerCertChain());
-        logger.debug(
-            "  client certificate filename       = " + clientBuilder.getClientCertFileName());
-        logger.debug(
-            "  client certificate password       = " + clientBuilder.getClientCertPassword());
-        logger.debug(
-            "  trust store filename              = " + clientBuilder.getTruststoreFilename());
-        logger.debug("  connection timeout                = "
-            + clientBuilder.getConnectTimeoutInMs() + " ms");
-        logger.debug(
-            "  read timeout                      = " + clientBuilder.getReadTimeoutInMs() + " ms");
-      }
-
-      restClient = clientBuilder.getClient();
+    /*
+     * Attempting a new way of doing non-blocking thread-safe lazy-initialization by using Java 1.8
+     * computeIfAbsent functionality. A null value will not be stored, but once a valid mapping has
+     * been established, then the same value will be returned.
+     * 
+     * One awkwardness of the computeIfAbsent is the lack of support for thrown exceptions, which
+     * required a bit of hoop jumping to preserve the original exception for the purpose of
+     * maintaining the pre-existing this API signature.
+     */
+ 
+    final InitializedClient clientInstance =
+        CLIENT_CACHE.computeIfAbsent(REST_CLIENT_INSTANCE, k -> loggedClientInitialization());
+    
+    if (clientInstance.getCaughtException() != null) {
+      throw new InstantiationException(clientInstance.getCaughtException().getMessage());
     }
 
-    return restClient;
+    return clientInstance.getClient();
+
+  }
+
+  /**
+   * This method will only be called if computerIfAbsent is true.  The return value is null, then the result is not
+   * stored in the map. 
+   * 
+   * @return a new client instance or null
+   */
+  private InitializedClient loggedClientInitialization() {
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Instantiating REST client with following parameters:");
+      logger.debug(clientBuilder.toString());
+    }
+    
+    InitializedClient initClient = new InitializedClient();
+    
+    try {
+      initClient.setClient(clientBuilder.getClient());
+    } catch ( Throwable error ) {
+      initClient.setCaughtException(error);
+    }
+    
+    return initClient;
+
   }
 
 
@@ -609,10 +725,10 @@ public class RestClient {
 
     opResult.setResultCode(statusCode);
 
-    if ((statusCode < 200) || (statusCode > 299)) {
-      opResult.setFailureCause(payload);
-    } else {
+    if (opResult.wasSuccessful()) {
       opResult.setResult(payload);
+    } else {
+      opResult.setFailureCause(payload);
     }
 
     opResult.setHeaders(response.getHeaders());
@@ -657,6 +773,34 @@ public class RestClient {
       return RequestType.DELETE;
     }
   }
+  
+  private class HeadRestOperation implements RestOperation {
+    public ClientResponse processOperation(Builder builder) {
+      return builder.head();
+    }
+
+    public RequestType getRequestType() {
+      return RequestType.HEAD;
+    }
+  }
+
+  private class PatchRestOperation implements RestOperation {
+
+    /**
+     * Technically there is no standarized PATCH operation for the 
+     * jersey client, but we can use the method-override approach 
+     * instead.
+     */
+    public ClientResponse processOperation(Builder builder) {
+      builder = builder.header("X-HTTP-Method-Override", "PATCH");
+      return builder.post(ClientResponse.class);
+    }
+
+    public RequestType getRequestType() {
+      return RequestType.PATCH;
+    }
+  }
+
 
   /**
    * Interface used wrap a Jersey REST call using a functional interface.
@@ -680,7 +824,36 @@ public class RestClient {
      * The supported REST request types.
      */
     public enum RequestType {
-      GET, PUT, POST, DELETE;
+      GET, PUT, POST, DELETE, PATCH, HEAD
     }
   }
+  
+  /*
+   * An entity to encapsulate an expected result and a potential failure cause when returning from a
+   * functional interface during the computeIfAbsent call.
+   */
+  private class InitializedClient {
+    private Client client;
+    private Throwable caughtException;
+    
+    public InitializedClient() {
+      client = null;
+      caughtException = null;
+    }
+    
+    public Client getClient() {
+      return client;
+    }
+    public void setClient(Client client) {
+      this.client = client;
+    }
+    public Throwable getCaughtException() {
+      return caughtException;
+    }
+    public void setCaughtException(Throwable caughtException) {
+      this.caughtException = caughtException;
+    }
+  
+  }
+  
 }

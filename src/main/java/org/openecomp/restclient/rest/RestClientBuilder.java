@@ -24,11 +24,6 @@
  */
 package org.openecomp.restclient.rest;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
-
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -40,16 +35,19 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.openecomp.restclient.enums.RestAuthenticationMode;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
+
 /**
  * This is a generic REST Client builder with flexible security validation. Sometimes it's nice to
  * be able to disable server chain cert validation and hostname validation to work-around lab
  * issues, but at the same time be able to provide complete validation with client cert + hostname +
- * server cert chain validation.  
- * I used the ModelLoader REST client as a base and merged in the TSUI client I wrote which also
- * validates the server hostname and server certificate chain.
- * 
- * @author DAVEA
- *
+ * server cert chain validation. I used the ModelLoader REST client as a base and merged in the TSUI
+ * client I wrote which also validates the server hostname and server certificate chain.
  */
 public class RestClientBuilder {
 
@@ -60,14 +58,13 @@ public class RestClientBuilder {
   public static final String DEFAULT_TRUST_STORE_FILENAME = null;
   public static final int DEFAULT_CONNECT_TIMEOUT_MS = 60000;
   public static final int DEFAULT_READ_TIMEOUT_MS = 60000;
+  public static final RestAuthenticationMode DEFAULT_AUTH_MODE = RestAuthenticationMode.HTTP_NOAUTH;
+  public static final String DEFAULT_BASIC_AUTH_USERNAME = "";
+  public static final String DEFAULT_BASIC_AUTH_PASSWORD = "";
 
   private static final String SSL_PROTOCOL = "TLS";
   private static final String KEYSTORE_ALGORITHM = "SunX509";
   private static final String KEYSTORE_TYPE = "PKCS12";
-
-  /*
-   * TODO: implement fluent interface?
-   */
 
   private boolean validateServerHostname;
   private boolean validateServerCertChain;
@@ -76,6 +73,9 @@ public class RestClientBuilder {
   private String truststoreFilename;
   private int connectTimeoutInMs;
   private int readTimeoutInMs;
+  private RestAuthenticationMode authenticationMode;
+  private String basicAuthUsername;
+  private String basicAuthPassword;
 
   /**
    * Rest Client Builder.
@@ -88,6 +88,9 @@ public class RestClientBuilder {
     truststoreFilename = DEFAULT_TRUST_STORE_FILENAME;
     connectTimeoutInMs = DEFAULT_CONNECT_TIMEOUT_MS;
     readTimeoutInMs = DEFAULT_READ_TIMEOUT_MS;
+    authenticationMode = RestAuthenticationMode.HTTP_NOAUTH;
+    basicAuthUsername = DEFAULT_BASIC_AUTH_USERNAME;
+    basicAuthPassword = DEFAULT_BASIC_AUTH_PASSWORD;
   }
 
   public boolean isValidateServerHostname() {
@@ -146,13 +149,50 @@ public class RestClientBuilder {
     this.readTimeoutInMs = readTimeoutInMs;
   }
 
+
+
+  public RestAuthenticationMode getAuthenticationMode() {
+    return authenticationMode;
+  }
+
+  public void setAuthenticationMode(RestAuthenticationMode authenticationMode) {
+    this.authenticationMode = authenticationMode;
+  }
+
+  public String getBasicAuthUsername() {
+    return basicAuthUsername;
+  }
+
+  public void setBasicAuthUsername(String basicAuthUsername) {
+    this.basicAuthUsername = basicAuthUsername;
+  }
+
+  public String getBasicAuthPassword() {
+    return basicAuthPassword;
+  }
+
+  public void setBasicAuthPassword(String basicAuthPassword) {
+    this.basicAuthPassword = basicAuthPassword;
+  }
+
   /**
-   * Returns Client.
+   * Returns Client configured for SSL
    */
   public Client getClient() throws Exception {
 
-    ClientConfig clientConfig = new DefaultClientConfig();
+    switch (authenticationMode) {
+      case SSL_BASIC:
+      case SSL_CERT:
+        return getClient(true);
 
+      default:
+        // return basic non-authenticating HTTP client
+        return getClient(false);
+    }
+
+  }
+
+  protected void setupSecureSocketLayerClientConfig(ClientConfig clientConfig) throws Exception {
     // Check to see if we need to perform proper validation of
     // the certificate chains.
     TrustManager[] trustAllCerts = null;
@@ -201,7 +241,6 @@ public class RestClientBuilder {
       ctx.init(null, trustAllCerts, null);
     }
 
-
     // Are we performing validation of the server host name?
     if (validateServerHostname) {
       clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
@@ -216,6 +255,21 @@ public class RestClientBuilder {
             }
           }, ctx));
     }
+  }
+
+
+  /**
+   * Returns client instance
+   * 
+   * @param useSsl - used to configure the client with an ssl-context or just plain http
+   */
+  protected Client getClient(boolean useSsl) throws Exception {
+
+    ClientConfig clientConfig = new DefaultClientConfig();
+
+    if (useSsl) {
+      setupSecureSocketLayerClientConfig(clientConfig);
+    }
 
     // Finally, create and initialize our client...
     Client client = null;
@@ -226,4 +280,34 @@ public class RestClientBuilder {
     // ...and return it to the caller.
     return client;
   }
+
+  public String getBasicAuthenticationCredentials() {
+
+    String usernameAndPassword = getBasicAuthUsername() + ":" + getBasicAuthPassword();
+    return "Basic " + java.util.Base64.getEncoder().encodeToString(usernameAndPassword.getBytes());
+  }
+
+  /* 
+   * Added a little bit of logic to obfuscate passwords that could be logged out
+   * (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "RestClientBuilder [validateServerHostname=" + validateServerHostname
+        + ", validateServerCertChain=" + validateServerCertChain + ", "
+        + (clientCertFileName != null ? "clientCertFileName=" + clientCertFileName + ", " : "")
+        + (clientCertPassword != null
+            ? "clientCertPassword="
+                + java.util.Base64.getEncoder().encodeToString(clientCertPassword.getBytes()) + ", "
+            : "")
+        + (truststoreFilename != null ? "truststoreFilename=" + truststoreFilename + ", " : "")
+        + "connectTimeoutInMs=" + connectTimeoutInMs + ", readTimeoutInMs=" + readTimeoutInMs + ", "
+        + (authenticationMode != null ? "authenticationMode=" + authenticationMode + ", " : "")
+        + (basicAuthUsername != null ? "basicAuthUsername=" + basicAuthUsername + ", " : "")
+        + (basicAuthPassword != null ? "basicAuthPassword="
+            + java.util.Base64.getEncoder().encodeToString(basicAuthPassword.getBytes()) : "")
+        + "]";
+  }
+
 }

@@ -11,20 +11,41 @@ In order to make the _REST Client_ library available to your microservice, inclu
     <dependency>
         <groupId>org.openecomp.aai</groupId>
         <artifactId>rest-client</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.1.0-SNAPSHOT</version>
     </dependency>
     
 ## Code Examples
 
 ### Creating and Configuring a Client Instance
-In order to start talking to a service, you need to create a client instance and configure it.  The _RestClient_ uses a fluent interface which allows it to be both instantiated and configured as in the following example:
+In order to start talking to a service, you need to create a client instance and configure it.  The _RestClient_ uses a fluent interface which allows it to be both instantiated and configured as in the following examples:
+
+i)  A client using an SSL Client Certificate:
 
     // Create an instance of the Rest Client and configure it.
     RestClient myClient = new RestClient()
+        .authenticationMode(RestAuthenticationMode.SSL_CERT)
         .validateServerHostname(false)
         .validateServerCertChain(true)
         .clientCertFile("certificate_filename")
         .trustStroe("trust_store_filename")
+        .connectTimeoutMs(1000)
+        .readTimeoutMs(1000)
+        
+ii) A client using SSL Basic-Auth:
+
+    // Create an instance of the Rest Client and configure it.
+    RestClient myClient = new RestClient()
+        .authenticationMode(RestAuthenticationMode.SSL_BASIC)
+        .basicAuthUsername("username")
+        .basicAuthPassword("password")
+        .connectTimeoutMs(1000)
+        .readTimeoutMs(1000)
+
+iii) A client using non-authentication HTTP:
+
+    // Create an instance of the Rest Client and configure it.
+    RestClient myClient = new RestClient()
+        .authenticationMode(RestAuthenticationMode.HTTP_NOAUTH)
         .connectTimeoutMs(1000)
         .readTimeoutMs(1000)
         
