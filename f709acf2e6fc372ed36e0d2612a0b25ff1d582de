@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Shwetank Dave <shwetank.dave@amdocs.com>
+Code-Review+2: Manisha Aggarwal <ma9181@att.com>
+Submitted-by: Manisha Aggarwal <ma9181@att.com>
+Submitted-at: Thu, 25 May 2017 14:06:05 +0000
+Reviewed-on: http://gerrit.onap.org/r/4473
+Project: aai/rest-client
+Branch: refs/heads/master
