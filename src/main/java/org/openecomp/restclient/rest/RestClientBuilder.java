@@ -58,7 +58,7 @@ public class RestClientBuilder {
   public static final String DEFAULT_TRUST_STORE_FILENAME = null;
   public static final int DEFAULT_CONNECT_TIMEOUT_MS = 60000;
   public static final int DEFAULT_READ_TIMEOUT_MS = 60000;
-  public static final RestAuthenticationMode DEFAULT_AUTH_MODE = RestAuthenticationMode.HTTP_NOAUTH;
+  public static final RestAuthenticationMode DEFAULT_AUTH_MODE = RestAuthenticationMode.SSL_CERT;
   public static final String DEFAULT_BASIC_AUTH_USERNAME = "";
   public static final String DEFAULT_BASIC_AUTH_PASSWORD = "";
 
@@ -88,7 +88,7 @@ public class RestClientBuilder {
     truststoreFilename = DEFAULT_TRUST_STORE_FILENAME;
     connectTimeoutInMs = DEFAULT_CONNECT_TIMEOUT_MS;
     readTimeoutInMs = DEFAULT_READ_TIMEOUT_MS;
-    authenticationMode = RestAuthenticationMode.HTTP_NOAUTH;
+    authenticationMode = DEFAULT_AUTH_MODE;
     basicAuthUsername = DEFAULT_BASIC_AUTH_USERNAME;
     basicAuthPassword = DEFAULT_BASIC_AUTH_PASSWORD;
   }
