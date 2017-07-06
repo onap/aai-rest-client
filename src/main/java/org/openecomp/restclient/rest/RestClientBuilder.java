@@ -65,6 +65,7 @@ public class RestClientBuilder {
   private static final String SSL_PROTOCOL = "TLS";
   private static final String KEYSTORE_ALGORITHM = "SunX509";
   private static final String KEYSTORE_TYPE = "PKCS12";
+  private static final String TRUST_STORE_PROPERTY = "javax.net.ssl.trustStore";
 
   private boolean validateServerHostname;
   private boolean validateServerCertChain;
@@ -198,7 +199,7 @@ public class RestClientBuilder {
     TrustManager[] trustAllCerts = null;
     if (validateServerCertChain) {
       if (truststoreFilename != null) {
-        System.setProperty("javax.net.ssl.trustStore", truststoreFilename);
+        System.setProperty(TRUST_STORE_PROPERTY, truststoreFilename);
       } else {
         throw new IllegalArgumentException("Trust store filename must be set!");
       }
