@@ -1,3 +1,21 @@
+/*
+ * ============LICENSE_START===========================================================================================
+ * Copyright (c) 2017 AT&T Intellectual Property.
+ * Copyright (c) 2017 Amdocs 
+ * All rights reserved.
+ * =====================================================================================================================
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * ============LICENSE_END================================================== ===========================================
+ * 
+ * ECOMP and OpenECOMP are trademarks and service marks of AT&T Intellectual Property.
+ */
 package org.openecomp.restclient.client;
 
 import static org.junit.Assert.assertEquals;
@@ -5,7 +23,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,707 +34,305 @@ import org.openecomp.restclient.rest.RestClientBuilder;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class RestfulClientTest {
 
-  private RestClientBuilder mockClientBuilder;
-  private Client mockedClient;
-  
-  /**
-   * Test case initialization
-   * 
-   * @throws Exception the exception
-   */
-  @Before
-  public void init() throws Exception {
-    mockClientBuilder = Mockito.mock( RestClientBuilder.class );
-    mockedClient = Mockito.mock( Client.class );
-  }
-  
-  @Test
-  public void validateConstructors() {
-    
-    RestClient restClient = new RestClient();
-    assertNotNull(restClient);
-    
-    restClient = null;
-    restClient = new RestClient( mockClientBuilder );
-    assertNotNull(restClient);
-    
-  }
-  
-  @Test
-  public void validateBasicClientConstruction() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    RestClient restClient = new RestClient( mockClientBuilder );
-    assertNotNull(restClient);
-    
-    Client client = restClient.authenticationMode(RestAuthenticationMode.HTTP_NOAUTH)
-        .connectTimeoutMs(1000).readTimeoutMs(500).getClient();
-   
-    assertNotNull(client);
-    
-  }
-  
-  @Test
-  public void validateClientWithSslBasicAuthConstruction() throws Exception {
+    private static final String TEST_URL = "http://localhost:9000/aai/v7";
 
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    RestClient restClient = new RestClient( mockClientBuilder );
-    assertNotNull(restClient);
-    
-    Client client = restClient.authenticationMode(RestAuthenticationMode.SSL_BASIC)
-        .connectTimeoutMs(1000).readTimeoutMs(500).basicAuthPassword("password")
-        .basicAuthUsername("username").getClient();
-   
-    assertNotNull(client);
-    
-  }
-  
-  @Test
-  public void validateClientWithSslCertConstruction() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    RestClient restClient = new RestClient( mockClientBuilder );
-    assertNotNull(restClient);
-    
-    Client client =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password").getClient();
-   
-    assertNotNull(client);
-    
-    client = null;
-    client = restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-        .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password")
-        .validateServerCertChain(true).validateServerHostname(true).getClient();
+    private final MultivaluedMapImpl emptyMap = new MultivaluedMapImpl();
 
-    assertNotNull(client);
+    private RestClientBuilder mockClientBuilder;
+    private Client mockedClient;
+    private WebResource mockedWebResource;
+    private Builder mockedBuilder;
+    private ClientResponse mockedClientResponse;
 
-    client = null;
-    client = restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-        .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password")
-        .trustStore("truststore").getClient();
-
-    assertNotNull(client);
-    
-  }
-  
-  @Test
-  public void validateSuccessfulPut() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.put(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
+    /**
+     * Test case initialization
+     * 
+     * @throws Exception the exception
      */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
+    @SuppressWarnings("unchecked")
+    @Before
+    public void init() throws Exception {
+        mockedClientResponse = Mockito.mock(ClientResponse.class);
+        setResponseStatus(Response.Status.OK);
+        Mockito.when(mockedClientResponse.getHeaders()).thenReturn(emptyMap);
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
 
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
+        mockedBuilder = Mockito.mock(Builder.class);
+        Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.post(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.put(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.delete(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.head()).thenReturn(mockedClientResponse);
 
-    OperationResult result = restClient.put("http://localhost:9000/aai/v7", "", headers, MediaType.APPLICATION_JSON_TYPE,
-        MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulPost() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.post(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        mockedWebResource = Mockito.mock(WebResource.class);
+        Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn(mockedBuilder);
 
-    /*
-     * Finally the elements we want to validate
+        mockedClient = Mockito.mock(Client.class);
+        Mockito.when(mockedClient.resource(Mockito.anyString())).thenReturn(mockedWebResource);
+
+        mockClientBuilder = Mockito.mock(RestClientBuilder.class);
+        Mockito.when(mockClientBuilder.getClient()).thenReturn(mockedClient);
+    }
+
+    @Test
+    public void validateConstructors() {
+        RestClient restClient = new RestClient();
+        assertNotNull(restClient);
+        restClient = new RestClient(mockClientBuilder);
+        assertNotNull(restClient);
+    }
+
+    @Test
+    public void validateBasicClientConstruction() throws Exception {
+        Client client = new RestClient(mockClientBuilder).authenticationMode(RestAuthenticationMode.HTTP_NOAUTH)
+                .connectTimeoutMs(1000).readTimeoutMs(500).getClient();
+        assertNotNull(client);
+    }
+
+    @Test
+    public void validateClientWithSslBasicAuthConstruction() throws Exception {
+        Client client = new RestClient(mockClientBuilder).authenticationMode(RestAuthenticationMode.SSL_BASIC)
+                .connectTimeoutMs(1000).readTimeoutMs(500).basicAuthPassword("password").basicAuthUsername("username")
+                .getClient();
+        assertNotNull(client);
+    }
+
+    @Test
+    public void validateClientWithSslCertConstruction() throws Exception {
+        // This test covers the standard SSL settings, i.e. no validation
+        assertNotNull(buildClient());
+
+        RestClient restClient = new RestClient(mockClientBuilder);
+
+        // Test with validation enabled
+        Client client = restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
+                .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password").validateServerCertChain(true)
+                .validateServerHostname(true).getClient();
+        assertNotNull(client);
+
+        // Test with a trust store
+        client = restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
+                .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password").trustStore("truststore")
+                .getClient();
+        assertNotNull(client);
+    }
+
+    @Test
+    public void validateSuccessfulPut() throws Exception {
+        RestClient restClient = buildClient();
+
+        OperationResult result = restClient.put(TEST_URL, "", emptyMap, MediaType.APPLICATION_JSON_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+        // Repeat the PUT operation, this time with a return code of 204
+        setResponseToNoContent();
+        result = restClient.put(TEST_URL, "", emptyMap, MediaType.APPLICATION_JSON_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getResultCode());
+        assertNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+
+    @Test
+    public void validateSuccessfulPost() throws Exception {
+        RestClient restClient = buildClient();
+
+        OperationResult result = restClient.post(TEST_URL, "", emptyMap, MediaType.APPLICATION_JSON_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+        // Repeat the POST operation, this time with a return code of 204
+        setResponseToNoContent();
+        result = restClient.post(TEST_URL, "", emptyMap, MediaType.APPLICATION_JSON_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getResultCode());
+        assertNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+
+    @Test
+    public void validateSuccessfulGet() throws Exception {
+        OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+
+    @Test
+    public void validateSuccessfulGetWithBasicAuth() throws Exception {
+        RestClient restClient = new RestClient(mockClientBuilder).authenticationMode(RestAuthenticationMode.SSL_BASIC)
+                .connectTimeoutMs(1000).readTimeoutMs(500).basicAuthUsername("username").basicAuthUsername("password");
+
+        OperationResult result = restClient.get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+
+    @Test
+    public void validateResourceNotFoundGet() throws Exception {
+        setResponseStatus(Response.Status.NOT_FOUND);
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("RNF");
+
+        OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.getResultCode());
+        assertNull(result.getResult());
+        assertNotNull(result.getFailureCause());
+    }
+
+    @Test
+    public void validateHealthCheck() throws Exception {
+        boolean targetServiceHealthy =
+                buildClient().healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
+
+        assertEquals(true, targetServiceHealthy);
+    }
+
+    @Test
+    public void validateHealthCheckFailureWith403() throws Exception {
+        Mockito.when(mockedClientResponse.getStatus()).thenReturn(Response.Status.FORBIDDEN.getStatusCode());
+
+        boolean targetServiceHealthy =
+                buildClient().healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
+
+        assertEquals(false, targetServiceHealthy);
+    }
+
+    @Test
+    public void validateHealthCheckFailureWithThrownException() throws Exception {
+        Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenThrow(new IllegalArgumentException("error"));
+
+        boolean targetServiceHealthy =
+                buildClient().healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
+
+        assertEquals(false, targetServiceHealthy);
+    }
+
+    @Test
+    public void validateSuccessfulGetWithRetries() throws Exception {
+        Mockito.when(mockedClientResponse.getStatus()).thenReturn(408).thenReturn(Response.Status.OK.getStatusCode());
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
+
+        OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+    }
+
+    @Test
+    public void validateFailedGetWithRetriesCausedByResourceNotFound() throws Exception {
+        setResponseStatus(Response.Status.NOT_FOUND);
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
+
+        OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.getResultCode());
+        assertNull(result.getResult());
+        assertNotNull(result.getFailureCause());
+
+    }
+
+    @Test
+    public void validateFailedGetAfterMaxRetries() throws Exception {
+        setResponseStatus(Response.Status.INTERNAL_SERVER_ERROR);
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error");
+
+        OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
+
+        assertEquals(504, result.getResultCode());
+        assertNull(result.getResult());
+        assertNotNull(result.getFailureCause());
+
+    }
+
+    @Test
+    public void validateSuccessfulDelete() throws Exception {
+        RestClient restClient = buildClient();
+
+        OperationResult result = restClient.delete(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+        // Repeat the DELETE operation, this time with a return code of 204
+        setResponseToNoContent();
+        result = restClient.delete(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getResultCode());
+        assertNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+
+
+    @Test
+    public void validateSuccessfulHead() throws Exception {
+        OperationResult result = buildClient().head(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+    }
+
+    @Test
+    public void validateSuccessfulPatch() throws Exception {
+        Mockito.when(mockedBuilder.header("X-HTTP-Method-Override", "PATCH")).thenReturn(mockedBuilder);
+        OperationResult result = buildClient().patch(TEST_URL, "", emptyMap, MediaType.APPLICATION_JSON_TYPE,
+                MediaType.APPLICATION_JSON_TYPE);
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
+        assertNull(result.getFailureCause());
+
+    }
+
+    /**
+     * Specify the status code of the response object returned by the mocked client
+     * 
+     * @param status object storing the status code to mock in the ClientResponse
      */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
+    private void setResponseStatus(Status status) {
+        Mockito.when(mockedClientResponse.getStatus()).thenReturn(status.getStatusCode());
+    }
 
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result = restClient.post("http://localhost:9000/aai/v7", "", headers, MediaType.APPLICATION_JSON_TYPE,
-        MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulGet() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
+    /**
+     * Set the mocked client to return a response of "204 No Content"
      */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
+    private void setResponseToNoContent() {
+        setResponseStatus(Response.Status.NO_CONTENT);
+        // The Jersey client throws an exception when getEntity() is called following a 204 response
+        UniformInterfaceException uniformInterfaceException = new UniformInterfaceException(mockedClientResponse);
+        Mockito.when(mockedClientResponse.getEntity(String.class)).thenThrow(uniformInterfaceException);
+    }
 
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulGetWithBasicAuth() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
+    /**
+     * @return a mocked Rest Client object using standard SSL settings
      */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
+    private RestClient buildClient() {
+        return new RestClient(mockClientBuilder).authenticationMode(RestAuthenticationMode.SSL_CERT)
+                .connectTimeoutMs(1000).readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
+    }
 
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_BASIC).connectTimeoutMs(1000)
-            .readTimeoutMs(500).basicAuthUsername("username").basicAuthUsername("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateResourceNotFoundGet() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(404);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("RNF");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(404, result.getResultCode());
-    assertNull(result.getResult());
-    assertNotNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateHealthCheck() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    boolean targetServiceHealthy =
-        restClient.healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
-    
-    assertEquals(true, targetServiceHealthy);
-    
-  }
-  
-  @Test
-  public void validateHealthCheckFailureWith403() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(403);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    boolean targetServiceHealthy =
-        restClient.healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
-    
-    assertEquals(false, targetServiceHealthy);
-    
-  }
-  
-  @Test
-  public void validateHealthCheckFailureWithThrownException() throws Exception {
-
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenThrow(new IllegalArgumentException("error"));
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-/*    Mockito.when(mockedClientResponse.getStatus()).thenReturn(403);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());*/
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    boolean targetServiceHealthy =
-        restClient.healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
-    
-    assertEquals(false, targetServiceHealthy);
-    
-  }
-  @Test  
-  public void validateSuccessfulGetWithRetries() throws Exception {
-    
-    RestClientBuilder myClientBuilder = Mockito.mock(RestClientBuilder.class);
-    Client myClient = Mockito.mock(Client.class);
-    
-    Mockito.when(myClientBuilder.getClient()).thenReturn(myClient).thenReturn(myClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( myClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    
-    /*
-     * Finally the elements we want to validate
-     */
-
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(408).thenReturn(200);
-
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
-    
-    MultivaluedMap<String, String> emptyHeaderMap = new MultivaluedMapImpl();
-    
-    // Mockito is smart, the last recorded thenReturn is repeated successively
-    // for all subsequent calls to the method.
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(emptyHeaderMap);
-
-    RestClient restClient = new RestClient( myClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE, 3);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  
-  @Test  
-  public void validateFailedGetWithRetriesCausedByResourceNotFound() throws Exception {
-    
-    RestClientBuilder myClientBuilder = Mockito.mock(RestClientBuilder.class);
-    Client myClient = Mockito.mock(Client.class);
-    
-    Mockito.when(myClientBuilder.getClient()).thenReturn(myClient).thenReturn(myClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( myClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    
-    /*
-     * Finally the elements we want to validate
-     */
-
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(404);
-
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
-    
-    MultivaluedMap<String, String> emptyHeaderMap = new MultivaluedMapImpl();
-    
-    // Mockito is smart, the last recorded thenReturn is repeated successively
-    // for all subsequent calls to the method.
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(emptyHeaderMap);
-
-    RestClient restClient = new RestClient( myClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE, 3);
-    
-    assertEquals(404, result.getResultCode());
-    assertNull(result.getResult());
-    assertNotNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateFailedGetAfterMaxRetries() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    
-    Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(null);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(500).thenReturn(500).thenReturn(500);
-
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error")
-        .thenReturn("error").thenReturn("error");
-    
-    MultivaluedMap<String, String> emptyHeaderMap = new MultivaluedMapImpl();
-    
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(emptyHeaderMap)
-        .thenReturn(emptyHeaderMap).thenReturn(emptyHeaderMap);
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.get("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE, 3);
-    
-    
-    assertEquals(504, result.getResultCode());
-    assertNull(result.getResult());
-    assertNotNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulDelete() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.delete(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result = restClient.delete("http://localhost:9000/aai/v7", headers, 
-        MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulHead() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.head()).thenReturn(mockedClientResponse);
-
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result =
-        restClient.head("http://localhost:9000/aai/v7", headers, MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-  
-  @Test
-  public void validateSuccessfulPatch() throws Exception {
-    
-    Mockito.when( mockClientBuilder.getClient() ).thenReturn(mockedClient);
-    
-    WebResource mockedWebResource = Mockito.mock(WebResource.class);
-    Builder mockedBuilder = Mockito.mock(Builder.class);
-    ClientResponse mockedClientResponse = Mockito.mock(ClientResponse.class);
-    
-    Mockito.when( mockedClient.resource(Mockito.anyString())).thenReturn( mockedWebResource );
-    Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn( mockedBuilder );
-    Mockito.when(mockedBuilder.post(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-    Mockito.when(mockedBuilder.header("X-HTTP-Method-Override", "PATCH")).thenReturn(mockedBuilder);
-    /*
-     * Finally the elements we want to validate
-     */
-    
-    Mockito.when(mockedClientResponse.getStatus()).thenReturn(200);
-    Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
-    Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedMapImpl());
-
-    RestClient restClient = new RestClient( mockClientBuilder );
-    
-    assertNotNull(restClient);
-    
-    restClient =
-        restClient.authenticationMode(RestAuthenticationMode.SSL_CERT).connectTimeoutMs(1000)
-            .readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
-    
-    assertNotNull(restClient);
-    
-    MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
-
-    OperationResult result = restClient.patch("http://localhost:9000/aai/v7", "", headers, MediaType.APPLICATION_JSON_TYPE,
-        MediaType.APPLICATION_JSON_TYPE);
-    
-    assertEquals(200, result.getResultCode());
-    assertNotNull(result.getResult());
-    assertNull(result.getFailureCause());
-    
-  }
-    
 }

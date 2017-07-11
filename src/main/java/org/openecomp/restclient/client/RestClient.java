@@ -719,16 +719,16 @@ public class RestClient {
       opResult.setFailureCause("Client response was null");
       return;
     }
-
+        
     int statusCode = response.getStatus();
-    String payload = response.getEntity(String.class);
-
     opResult.setResultCode(statusCode);
 
     if (opResult.wasSuccessful()) {
-      opResult.setResult(payload);
+        if (statusCode != Response.Status.NO_CONTENT.getStatusCode()) {
+            opResult.setResult(response.getEntity(String.class));
+        }
     } else {
-      opResult.setFailureCause(payload);
+        opResult.setFailureCause(response.getEntity(String.class));
     }
 
     opResult.setHeaders(response.getHeaders());
