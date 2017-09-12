@@ -268,5 +268,15 @@ public class RestClientBuilderTest {
    
   }
   
+  @Test
+  public void validateSslProtocolConfiguration() throws Exception {
+    
+    RestClientBuilder restClientBuilder = new RestClientBuilder();
+    assertEquals(RestClientBuilder.DEFAULT_SSL_PROTOCOL, restClientBuilder.getSslProtocol());
+    
+    restClientBuilder.setSslProtocol("TLSv1.2");
+    assertEquals("TLSv1.2", restClientBuilder.getSslProtocol());
+    
+  }
     
 }

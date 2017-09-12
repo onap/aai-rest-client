@@ -39,7 +39,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-
+ 
 /**
  * This is a generic REST Client builder with flexible security validation. Sometimes it's nice to
  * be able to disable server chain cert validation and hostname validation to work-around lab
@@ -59,8 +59,8 @@ public class RestClientBuilder {
   public static final RestAuthenticationMode DEFAULT_AUTH_MODE = RestAuthenticationMode.SSL_CERT;
   public static final String DEFAULT_BASIC_AUTH_USERNAME = "";
   public static final String DEFAULT_BASIC_AUTH_PASSWORD = "";
+  public static final String DEFAULT_SSL_PROTOCOL = "TLS";
 
-  private static final String SSL_PROTOCOL = "TLS";
   private static final String KEYSTORE_ALGORITHM = "SunX509";
   private static final String KEYSTORE_TYPE = "PKCS12";
   private static final String TRUST_STORE_PROPERTY = "javax.net.ssl.trustStore";
@@ -75,6 +75,7 @@ public class RestClientBuilder {
   private RestAuthenticationMode authenticationMode;
   private String basicAuthUsername;
   private String basicAuthPassword;
+  private String sslProtocol;
 
   /**
    * Rest Client Builder.
@@ -90,6 +91,7 @@ public class RestClientBuilder {
     authenticationMode = DEFAULT_AUTH_MODE;
     basicAuthUsername = DEFAULT_BASIC_AUTH_USERNAME;
     basicAuthPassword = DEFAULT_BASIC_AUTH_PASSWORD;
+    sslProtocol = DEFAULT_SSL_PROTOCOL;
   }
 
   public boolean isValidateServerHostname() {
@@ -148,8 +150,6 @@ public class RestClientBuilder {
     this.readTimeoutInMs = readTimeoutInMs;
   }
 
-
-
   public RestAuthenticationMode getAuthenticationMode() {
     return authenticationMode;
   }
@@ -172,6 +172,14 @@ public class RestClientBuilder {
 
   public void setBasicAuthPassword(String basicAuthPassword) {
     this.basicAuthPassword = basicAuthPassword;
+  }
+
+  public String getSslProtocol() {
+    return sslProtocol;
+  }
+
+  public void setSslProtocol(String sslProtocol) {
+    this.sslProtocol = sslProtocol;
   }
 
   /**
@@ -219,7 +227,7 @@ public class RestClientBuilder {
 
     // Set up the SSL context, keystore, etc. to use for our connection
     // to the AAI.
-    SSLContext ctx = SSLContext.getInstance(SSL_PROTOCOL);
+    SSLContext ctx = SSLContext.getInstance(sslProtocol);
     KeyManagerFactory kmf = KeyManagerFactory.getInstance(KEYSTORE_ALGORITHM);
     KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
 
