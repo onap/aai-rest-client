@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.onap.aai.restclient.client.OperationResult;
 import org.onap.aai.restclient.client.RestClient;
@@ -165,6 +166,31 @@ public class RestfulClientTest {
 
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getResultCode());
         assertNull(result.getResult());
+        assertNull(result.getFailureCause());
+    }
+    
+    @Test
+    public void validateSuccessfulPost_withMultivaluedHeader() throws Exception {
+        RestClient restClient = buildClient();
+
+        MultivaluedMapImpl headerMap = new MultivaluedMapImpl();
+        
+        headerMap.add("txnId", "123");
+        headerMap.add("txnId", "456");
+        headerMap.add("txnId", "789");
+
+        OperationResult result = restClient.post(TEST_URL, "", headerMap, MediaType.APPLICATION_JSON_TYPE,
+            MediaType.APPLICATION_JSON_TYPE);
+
+        // capture the txnId header from the outgoing request  
+        ArgumentCaptor<String> txnIdHeaderName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> txnIdHeaderValue = ArgumentCaptor.forClass(String.class);
+        
+        Mockito.verify(mockedBuilder, Mockito.atLeast(1)).header(txnIdHeaderName.capture(), txnIdHeaderValue.capture());
+        assertEquals("123;456;789", txnIdHeaderValue.getValue());
+
+        assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
+        assertNotNull(result.getResult());
         assertNull(result.getFailureCause());
     }
 

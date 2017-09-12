@@ -236,6 +236,19 @@ public class RestClient {
     clientBuilder.setReadTimeoutInMs(timeout);
     return this;
   }
+  
+  /**
+   * Configures the client for a specific SSL protocol
+   *
+   * @param sslProtocol - protocol string constant such as TLS, TLSv1, TLSv1.1, TLSv1.2
+   *
+   * @return The AAIRESTClient instance. 
+   */
+  public RestClient sslProtocol(String sslProtocol) {
+    logger.debug("Set sslProtocol = " + sslProtocol);
+    clientBuilder.setSslProtocol(sslProtocol);
+    return this;
+  }
 
   private boolean shouldRetry(OperationResult operationResult) {
 
@@ -595,7 +608,7 @@ public class RestClient {
 
     if (headers != null) {
       for (Entry<String, List<String>> header : headers.entrySet()) {
-        builder.header(header.getKey(), header.getValue());
+        builder.header(header.getKey(), String.join(";",header.getValue()));
       }
       
       if (clientBuilder.getAuthenticationMode() == RestAuthenticationMode.SSL_BASIC) {
