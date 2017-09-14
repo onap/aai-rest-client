@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.rest;
+package org.onap.aai.restclient.rest;
 
 import java.io.FileInputStream;
 import java.security.KeyStore;
@@ -33,7 +33,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.openecomp.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.enums.RestAuthenticationMode;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;

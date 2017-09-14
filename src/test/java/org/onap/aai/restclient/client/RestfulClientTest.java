@@ -16,7 +16,7 @@
  * 
  * ECOMP and OpenECOMP are trademarks and service marks of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.client;
+package org.onap.aai.restclient.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,8 +29,10 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.openecomp.restclient.enums.RestAuthenticationMode;
-import org.openecomp.restclient.rest.RestClientBuilder;
+import org.onap.aai.restclient.client.OperationResult;
+import org.onap.aai.restclient.client.RestClient;
+import org.onap.aai.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.rest.RestClientBuilder;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;

@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.client;
+package org.onap.aai.restclient.client;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
@@ -36,15 +36,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.onap.aai.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.logging.RestClientMsgs;
+import org.onap.aai.restclient.rest.RestClientBuilder;
 import org.openecomp.cl.api.LogFields;
 import org.openecomp.cl.api.LogLine;
 import org.openecomp.cl.api.Logger;
 import org.openecomp.cl.eelf.LoggerFactory;
 import org.openecomp.cl.mdc.MdcContext;
 import org.openecomp.cl.mdc.MdcOverride;
-import org.openecomp.restclient.enums.RestAuthenticationMode;
-import org.openecomp.restclient.logging.RestClientMsgs;
-import org.openecomp.restclient.rest.RestClientBuilder;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
