@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.rest;
+package org.onap.aai.restclient.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,7 +30,8 @@ import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.openecomp.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.rest.RestClientBuilder;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;

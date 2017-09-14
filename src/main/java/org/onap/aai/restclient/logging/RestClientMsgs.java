@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.logging;
+package org.onap.aai.restclient.logging;
 
 import com.att.eelf.i18n.EELFResourceManager;
 import org.openecomp.cl.eelf.LogMessageEnum;

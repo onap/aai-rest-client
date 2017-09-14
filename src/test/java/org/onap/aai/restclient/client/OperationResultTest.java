@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.client;
+package org.onap.aai.restclient.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,6 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.onap.aai.restclient.client.OperationResult;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 

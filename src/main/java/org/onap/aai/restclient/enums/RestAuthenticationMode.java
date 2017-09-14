@@ -20,7 +20,7 @@
  *
  * ECOMP is a trademark and service mark of AT&T Intellectual Property.
  */
-package org.openecomp.restclient.enums;
+package org.onap.aai.restclient.enums;
 
 /**
  * Authentication Modes:
