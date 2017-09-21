@@ -39,12 +39,12 @@ import javax.ws.rs.core.Response;
 import org.onap.aai.restclient.enums.RestAuthenticationMode;
 import org.onap.aai.restclient.logging.RestClientMsgs;
 import org.onap.aai.restclient.rest.RestClientBuilder;
-import org.openecomp.cl.api.LogFields;
-import org.openecomp.cl.api.LogLine;
-import org.openecomp.cl.api.Logger;
-import org.openecomp.cl.eelf.LoggerFactory;
-import org.openecomp.cl.mdc.MdcContext;
-import org.openecomp.cl.mdc.MdcOverride;
+import org.onap.aai.cl.api.LogFields;
+import org.onap.aai.cl.api.LogLine;
+import org.onap.aai.cl.api.Logger;
+import org.onap.aai.cl.eelf.LoggerFactory;
+import org.onap.aai.cl.mdc.MdcContext;
+import org.onap.aai.cl.mdc.MdcOverride;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
