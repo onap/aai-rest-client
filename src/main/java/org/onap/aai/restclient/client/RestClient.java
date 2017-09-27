@@ -67,7 +67,7 @@ public class RestClient {
    */
   private RestClientBuilder clientBuilder;
   
-  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<String,InitializedClient>();
+  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<>();
   private static final String REST_CLIENT_INSTANCE = "REST_CLIENT_INSTANCE";
 
   /** Standard logger for producing log statements. */
@@ -326,10 +326,14 @@ public class RestClient {
     }
 
     // If we've gotten this far, then we failed all of our retries.
+    if (result == null) {
+        result = new OperationResult();
+    }
+
     result.setNumRetries(numRetries);
     result.setResultCode(504);
-    result.setFailureCause(
-        "Failed to get a successful result after multiple retries to target server.");
+    result.setFailureCause("Failed to get a successful result after multiple retries to target server.");
+
 
     return result;
   }
@@ -568,8 +572,8 @@ public class RestClient {
         logger.info(RestClientMsgs.HEALTH_CHECK_SUCCESS, destAppName, url);
         return true;
       } else {
-        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url,
-            result.getFailureCause());
+        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url, result != null ? result.getFailureCause()
+                                                                                           : null);
         return false;
       }
     } catch (Exception e) {
@@ -594,9 +598,7 @@ public class RestClient {
       Map<String, List<String>> headers, MediaType contentType, MediaType responseType) {
 
     WebResource resource = client.resource(url);
-    Builder builder = null;
-
-    builder = resource.accept(responseType);
+    Builder builder = resource.accept(responseType);
 
     if (contentType != null) {
       builder.type(contentType);
