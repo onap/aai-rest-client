@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a437d4f_3d97163c",
+        "filename": "src/main/java/org/onap/aai/restclient/client/RestClient.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1041
+      },
+      "writtenOn": "2017-09-27T13:34:35Z",
+      "side": 0,
+      "message": "Just curious, why did you remove the access modifiers?",
+      "revId": "6beac67840ae725879adb59d5bea1aa8cd8f3789",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}

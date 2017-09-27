@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a437d4f_9d704241",
+        "filename": "src/main/java/org/onap/aai/restclient/client/RestClient.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1041
+      },
+      "writtenOn": "2017-09-27T13:34:35Z",
+      "side": 1,
+      "message": "I understand that we are trying to avoid sonar errors here. But for a developer when they come and look at this, this does not makes sense. According to this logic if the result is null then we are returning null in 335. Which would cause a avalanche effect in classes that rely on this function. I would also add a else condition which would initialize it assign some default error value to it. In fact I will have that check first followed by a else where we do what was being done earlier.",
+      "range": {
+        "startLine": 329,
+        "startChar": 4,
+        "endLine": 329,
+        "endChar": 23
+      },
+      "revId": "42961c884f85ef6883897c9709ed7348ce7ca15c",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a437d4f_5ddada4c",
+        "filename": "src/main/java/org/onap/aai/restclient/client/RestClient.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1041
+      },
+      "writtenOn": "2017-09-27T13:34:35Z",
+      "side": 1,
+      "message": "Can we clean this to Builder  builder \u003d resource.accept(responseType);",
+      "range": {
+        "startLine": 598,
+        "startChar": 4,
+        "endLine": 598,
+        "endChar": 20
+      },
+      "revId": "42961c884f85ef6883897c9709ed7348ce7ca15c",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
