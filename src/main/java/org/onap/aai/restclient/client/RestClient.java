@@ -22,6 +22,24 @@
  */
 package org.onap.aai.restclient.client;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.WebResource.Builder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.onap.aai.cl.api.LogFields;
+import org.onap.aai.cl.api.LogLine;
+import org.onap.aai.cl.api.Logger;
+import org.onap.aai.cl.eelf.LoggerFactory;
+import org.onap.aai.cl.mdc.MdcContext;
+import org.onap.aai.cl.mdc.MdcOverride;
+import org.onap.aai.restclient.enums.RestAuthenticationMode;
+import org.onap.aai.restclient.logging.RestClientMsgs;
+import org.onap.aai.restclient.rest.RestClientBuilder;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -31,26 +49,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import org.onap.aai.restclient.enums.RestAuthenticationMode;
-import org.onap.aai.restclient.logging.RestClientMsgs;
-import org.onap.aai.restclient.rest.RestClientBuilder;
-import org.onap.aai.cl.api.LogFields;
-import org.onap.aai.cl.api.LogLine;
-import org.onap.aai.cl.api.Logger;
-import org.onap.aai.cl.eelf.LoggerFactory;
-import org.onap.aai.cl.mdc.MdcContext;
-import org.onap.aai.cl.mdc.MdcOverride;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 
 /**
@@ -67,7 +65,7 @@ public class RestClient {
    */
   private RestClientBuilder clientBuilder;
   
-  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<String,InitializedClient>();
+  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<>();
   private static final String REST_CLIENT_INSTANCE = "REST_CLIENT_INSTANCE";
 
   /** Standard logger for producing log statements. */
@@ -326,10 +324,11 @@ public class RestClient {
     }
 
     // If we've gotten this far, then we failed all of our retries.
-    result.setNumRetries(numRetries);
-    result.setResultCode(504);
-    result.setFailureCause(
-        "Failed to get a successful result after multiple retries to target server.");
+    if (result != null) {
+      result.setNumRetries(numRetries);
+      result.setResultCode(504);
+      result.setFailureCause("Failed to get a successful result after multiple retries to target server.");
+    }
 
     return result;
   }
@@ -568,8 +567,8 @@ public class RestClient {
         logger.info(RestClientMsgs.HEALTH_CHECK_SUCCESS, destAppName, url);
         return true;
       } else {
-        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url,
-            result.getFailureCause());
+        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url, result != null ? result.getFailureCause()
+                                                                                           : null);
         return false;
       }
     } catch (Exception e) {
@@ -594,7 +593,7 @@ public class RestClient {
       Map<String, List<String>> headers, MediaType contentType, MediaType responseType) {
 
     WebResource resource = client.resource(url);
-    Builder builder = null;
+    Builder builder;
 
     builder = resource.accept(responseType);
 
@@ -824,17 +823,17 @@ public class RestClient {
      * @param builder the Jersey builder used to make the request
      * @return the response from the REST endpoint
      */
-    public ClientResponse processOperation(Builder builder);
+    ClientResponse processOperation(Builder builder);
 
     /**
      * Returns the REST request type.
      */
-    public RequestType getRequestType();
+    RequestType getRequestType();
 
     /**
      * The supported REST request types.
      */
-    public enum RequestType {
+    enum RequestType {
       GET, PUT, POST, DELETE, PATCH, HEAD
     }
   }
