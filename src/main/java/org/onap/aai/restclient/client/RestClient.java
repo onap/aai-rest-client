@@ -67,7 +67,7 @@ public class RestClient {
    */
   private RestClientBuilder clientBuilder;
   
-  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<String,InitializedClient>();
+  private final ConcurrentMap<String,InitializedClient> CLIENT_CACHE = new ConcurrentHashMap<>();
   private static final String REST_CLIENT_INSTANCE = "REST_CLIENT_INSTANCE";
 
   /** Standard logger for producing log statements. */
@@ -326,10 +326,11 @@ public class RestClient {
     }
 
     // If we've gotten this far, then we failed all of our retries.
-    result.setNumRetries(numRetries);
-    result.setResultCode(504);
-    result.setFailureCause(
-        "Failed to get a successful result after multiple retries to target server.");
+    if (result != null) {
+      result.setNumRetries(numRetries);
+      result.setResultCode(504);
+      result.setFailureCause("Failed to get a successful result after multiple retries to target server.");
+    }
 
     return result;
   }
@@ -568,8 +569,8 @@ public class RestClient {
         logger.info(RestClientMsgs.HEALTH_CHECK_SUCCESS, destAppName, url);
         return true;
       } else {
-        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url,
-            result.getFailureCause());
+        logger.error(RestClientMsgs.HEALTH_CHECK_FAILURE, destAppName, url, result != null ? result.getFailureCause()
+                                                                                           : null);
         return false;
       }
     } catch (Exception e) {
@@ -594,7 +595,7 @@ public class RestClient {
       Map<String, List<String>> headers, MediaType contentType, MediaType responseType) {
 
     WebResource resource = client.resource(url);
-    Builder builder = null;
+    Builder builder;
 
     builder = resource.accept(responseType);
 
@@ -824,17 +825,17 @@ public class RestClient {
      * @param builder the Jersey builder used to make the request
      * @return the response from the REST endpoint
      */
-    public ClientResponse processOperation(Builder builder);
+    ClientResponse processOperation(Builder builder);
 
     /**
      * Returns the REST request type.
      */
-    public RequestType getRequestType();
+    RequestType getRequestType();
 
     /**
      * The supported REST request types.
      */
-    public enum RequestType {
+    enum RequestType {
       GET, PUT, POST, DELETE, PATCH, HEAD
     }
   }
