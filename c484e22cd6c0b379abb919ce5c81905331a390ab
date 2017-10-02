@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Arul Nambi <arul.nambi@amdocs.com>
+Code-Review+2: James Forsyth <jf2512@att.com>
+Submitted-by: James Forsyth <jf2512@att.com>
+Submitted-at: Mon, 02 Oct 2017 15:21:14 +0000
+Reviewed-on: http://gerrit.onap.org/r/15953
+Project: aai/rest-client
+Branch: refs/heads/master
