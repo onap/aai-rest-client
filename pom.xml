@@ -9,7 +9,7 @@
 
 	<groupId>org.onap.aai</groupId>
 	<artifactId>rest-client</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1-SNAPSHOT</version>
 	<name>aai-rest-client</name>
         
 	<properties>
@@ -29,13 +29,11 @@
 			<artifactId>jersey-client</artifactId>
 			<version>1.18</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.onap.aai.logging-service</groupId>
 			<artifactId>common-logging</artifactId>
-			<version>1.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
