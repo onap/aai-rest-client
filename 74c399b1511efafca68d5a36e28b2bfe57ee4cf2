@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_4acab450",
+        "filename": "pom.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 453
+      },
+      "writtenOn": "2017-12-12T15:10:51Z",
+      "side": 1,
+      "message": "As per my earlier email, my preference is not to tie the common logging version to the project version.  Using the released version 1.1.0 is my preference.  (There is an ongoing email chain on this, so let\u0027s wait for the resolution)",
+      "revId": "74c399b1511efafca68d5a36e28b2bfe57ee4cf2",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
