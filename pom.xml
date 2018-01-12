@@ -10,7 +10,7 @@
 	<groupId>org.onap.aai</groupId>
 	<artifactId>rest-client</artifactId>
 	<version>1.1.1-SNAPSHOT</version>
-	<name>aai-rest-client</name>
+	<name>aai-rest-client - amsterdam</name>
         
 	<properties>
               <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
