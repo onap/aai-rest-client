@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>org.onap.aai.logging-service</groupId>
 			<artifactId>common-logging</artifactId>
-			<version>${project.version}</version>
+			<version>1.2.1</version>
 		</dependency>
 		
 		<dependency>
