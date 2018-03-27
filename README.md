@@ -11,7 +11,7 @@ In order to make the _REST Client_ library available to your microservice, inclu
     <dependency>
         <groupId>org.openecomp.aai</groupId>
         <artifactId>rest-client</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
     </dependency>
     
 ## Code Examples
