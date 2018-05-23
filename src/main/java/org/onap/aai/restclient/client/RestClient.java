@@ -623,43 +623,58 @@ public class RestClient {
 
   private void debugRequest(String url, String payload, Map<String, List<String>> headers,
       MediaType responseType) {
-    if (logger.isDebugEnabled()) {
-      StringBuilder debugRequest = new StringBuilder("REQUEST:\n");
-      debugRequest.append("URL: ").append(url).append("\n");
-      debugRequest.append("Payload: ").append(payload).append("\n");
-      debugRequest.append("Response Type: ").append(responseType).append("\n");
-      if (headers != null) {
-        debugRequest.append("Headers: ");
-        for (Entry<String, List<String>> header : headers.entrySet()) {
-          debugRequest.append("\n\t").append(header.getKey()).append(":");
-          for (String headerEntry : header.getValue()) {
-            debugRequest.append("\"").append(headerEntry).append("\" ");
-          }
-        }
-      }
-      logger.debug(debugRequest.toString());
+    if (!logger.isDebugEnabled()) {
+      return;
     }
+
+    StringBuilder debugRequest = new StringBuilder("REQUEST:\n");
+    debugRequest.append("URL: ").append(url).append("\n");
+    debugRequest.append("Payload: ").append(payload).append("\n");
+    debugRequest.append("Response Type: ").append(responseType).append("\n");
+
+    if (headers == null) {
+      logger.debug(debugRequest.toString());
+      return;
+    }
+
+    debugRequest.append("Headers: ");
+    for (Entry<String, List<String>> header : headers.entrySet()) {
+      debugRequest.append("\n\t").append(header.getKey()).append(":");
+      for (String headerEntry : header.getValue()) {
+        debugRequest.append("\"").append(headerEntry).append("\" ");
+      }
+    }
+
+    logger.debug(debugRequest.toString());
+
   }
 
   private void debugResponse(OperationResult operationResult,
       MultivaluedMap<String, String> headers) {
-    if (logger.isDebugEnabled()) {
-      StringBuilder debugResponse = new StringBuilder("RESPONSE:\n");
-      debugResponse.append("Result: ").append(operationResult.getResultCode()).append("\n");
-      debugResponse.append("Failure Cause: ").append(operationResult.getFailureCause())
-          .append("\n");
-      debugResponse.append("Payload: ").append(operationResult.getResult()).append("\n");
-      if (headers != null) {
-        debugResponse.append("Headers: ");
-        for (Entry<String, List<String>> header : headers.entrySet()) {
-          debugResponse.append("\n\t").append(header.getKey()).append(":");
-          for (String headerEntry : header.getValue()) {
-            debugResponse.append("\"").append(headerEntry).append("\" ");
-          }
-        }
-      }
-      logger.debug(debugResponse.toString());
+
+    if (!logger.isDebugEnabled()) {
+      return;
     }
+
+    StringBuilder debugResponse = new StringBuilder("RESPONSE:\n");
+    debugResponse.append("Result: ").append(operationResult.getResultCode()).append("\n");
+    debugResponse.append("Failure Cause: ").append(operationResult.getFailureCause()).append("\n");
+    debugResponse.append("Payload: ").append(operationResult.getResult()).append("\n");
+
+    if (headers == null) {
+      logger.debug(debugResponse.toString());
+      return;
+    }
+
+    debugResponse.append("Headers: ");
+    for (Entry<String, List<String>> header : headers.entrySet()) {
+      debugResponse.append("\n\t").append(header.getKey()).append(":");
+      for (String headerEntry : header.getValue()) {
+        debugResponse.append("\"").append(headerEntry).append("\" ");
+      }
+    }
+
+    logger.debug(debugResponse.toString());
   }
 
   /**
@@ -708,7 +723,7 @@ public class RestClient {
     
     try {
       initClient.setClient(clientBuilder.getClient());
-    } catch ( Throwable error ) {
+    } catch ( Exception error) {
       initClient.setCaughtException(error);
     }
     
