@@ -611,7 +611,9 @@ public class RestClient {
         builder.header(header.getKey(), String.join(";",header.getValue()));
       }
       
-      if (clientBuilder.getAuthenticationMode() == RestAuthenticationMode.SSL_BASIC) {
+      //Added additional check to prevent adding duplicate authorization header if client is already sending the authorization header 
+      // AAI-1097 - For AAI calls when Rest authentication mode is selected as SSL_BASIC getting 403 error
+      if (clientBuilder.getAuthenticationMode() == RestAuthenticationMode.SSL_BASIC && headers.get(Headers.AUTHORIZATION) == null) {
         builder = builder.header(Headers.AUTHORIZATION,
             clientBuilder.getBasicAuthenticationCredentials());
       }
