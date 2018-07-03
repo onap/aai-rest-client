@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
 import org.onap.aai.restclient.enums.RestAuthenticationMode;
@@ -319,6 +320,7 @@ public class RestClient {
 
       } catch (InterruptedException e) {
         logger.error(RestClientMsgs.HTTP_REQUEST_INTERRUPTED, url, e.getLocalizedMessage());
+        Thread.currentThread().interrupt();
         break;
       }
     }
@@ -381,7 +383,9 @@ public class RestClient {
       populateOperationResult(clientResponse, operationResult);
 
       // Debug log the response
-      debugResponse(operationResult, clientResponse.getHeaders());
+      if (clientResponse != null) {
+        debugResponse(operationResult, clientResponse.getHeaders());
+      }
 
     } catch (Exception ex) {
 
