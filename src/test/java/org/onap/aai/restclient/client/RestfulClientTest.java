@@ -2,6 +2,7 @@
  * ============LICENSE_START===========================================================================================
  * Copyright (c) 2017 AT&T Intellectual Property.
  * Copyright (c) 2017 Amdocs 
+ * Modification Copyright (c) 2018 IBM. 
  * All rights reserved.
  * =====================================================================================================================
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -21,6 +22,7 @@ package org.onap.aai.restclient.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -361,6 +363,15 @@ public class RestfulClientTest {
     private RestClient buildClient() {
         return new RestClient(mockClientBuilder).authenticationMode(RestAuthenticationMode.SSL_CERT)
                 .connectTimeoutMs(1000).readTimeoutMs(500).clientCertFile("cert").clientCertPassword("password");
+    }
+    
+    @Test
+    public void testGetClient() throws Exception 
+    {
+        RestClientBuilder restClientBuilder= new RestClientBuilder();
+        RestAuthenticationMode sslBasic= RestAuthenticationMode.SSL_BASIC;
+        restClientBuilder.setAuthenticationMode(sslBasic);
+        assertTrue(restClientBuilder.getClient() instanceof Client);
     }
 
 }
