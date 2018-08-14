@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a76adc5_1dbce568",
+        "filename": "src/test/java/org/onap/aai/restclient/client/RestfulClientTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 3771
+      },
+      "writtenOn": "2018-08-14T12:36:31Z",
+      "side": 1,
+      "message": "I\u0027m not sure if variable sslBasic is needed.",
+      "revId": "9c5da7fd7a6a2a7f41e71415e984c5f4fd1efb85",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
