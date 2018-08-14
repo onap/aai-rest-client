@@ -22,6 +22,30 @@
       "revId": "e89c18d6308bf5508eaea3f605edf70cbb304033",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a76adc5_7ddb991b",
+        "filename": "src/test/java/org/onap/aai/restclient/client/RestfulClientTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1089
+      },
+      "writtenOn": "2018-08-14T18:55:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a76adc5_9daa356f",
+      "range": {
+        "startLine": 372,
+        "startChar": 31,
+        "endLine": 372,
+        "endChar": 40
+      },
+      "revId": "e89c18d6308bf5508eaea3f605edf70cbb304033",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
     }
   ]
 }
