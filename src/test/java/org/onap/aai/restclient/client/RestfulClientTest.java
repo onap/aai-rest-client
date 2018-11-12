@@ -342,6 +342,7 @@ public class RestfulClientTest {
     public void testGetClient() throws Exception {
         RestClientBuilder restClientBuilder= new RestClientBuilder();
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_BASIC);
+        restClientBuilder.setTruststoreFilename("truststore");
         assertTrue(restClientBuilder.getClient() instanceof Client);
     }
 

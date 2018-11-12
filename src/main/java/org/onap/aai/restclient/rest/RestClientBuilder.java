@@ -201,27 +201,11 @@ public class RestClientBuilder {
     // Check to see if we need to perform proper validation of
     // the certificate chains.
     TrustManager[] trustAllCerts = null;
-    if (validateServerCertChain) {
       if (truststoreFilename != null) {
         System.setProperty(TRUST_STORE_PROPERTY, truststoreFilename);
       } else {
         throw new IllegalArgumentException("Trust store filename must be set!");
       }
-
-    } else {
-
-      // We aren't validating certificates, so create a trust manager that does
-      // not validate certificate chains.
-      trustAllCerts = new TrustManager[] {new X509TrustManager() {
-        public X509Certificate[] getAcceptedIssuers() {
-          return null;
-        }
-
-        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-
-        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-      }};
-    }
 
     // Set up the SSL context, keystore, etc. to use for our connection
     // to the AAI.

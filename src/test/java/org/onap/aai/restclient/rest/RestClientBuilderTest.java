@@ -141,6 +141,7 @@ public class RestClientBuilderTest {
     restClientBuilder.setReadTimeoutInMs(54321);
     restClientBuilder.setBasicAuthUsername("username");
     restClientBuilder.setBasicAuthPassword("password");
+    restClientBuilder.setTruststoreFilename("truststore");
     
     Client client = restClientBuilder.getClient();
    
@@ -155,7 +156,7 @@ public class RestClientBuilderTest {
     
   }
 
-  @Test
+  @Test (expected=IllegalArgumentException.class)
   public void validateSslCertClient_noHostOrCertChainValidation() throws Exception {
     
     RestClientBuilder restClientBuilder = new RestClientBuilder();
@@ -166,18 +167,10 @@ public class RestClientBuilderTest {
     restClientBuilder.setValidateServerCertChain(false);
     restClientBuilder.setValidateServerHostname(false);
     
-    Client client = restClientBuilder.getClient();
-   
-    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
-    HTTPSProperties sslProps = null;
-    if ( sslPropertiesObj instanceof HTTPSProperties ) {
-      sslProps = (HTTPSProperties)sslPropertiesObj;
-      assertNotNull(sslProps.getHostnameVerifier());
-    } else {
-      fail("Unexpected value for https properties object");
-    }  }
+    Client client = restClientBuilder.getClient(); 
+  }
   
-  @Test
+  @Test (expected=IllegalArgumentException.class)
   public void validateSslCertClient_hostOnlyValidation() throws Exception {
     
     RestClientBuilder restClientBuilder = new RestClientBuilder();
@@ -190,15 +183,7 @@ public class RestClientBuilderTest {
     
     Client client = restClientBuilder.getClient();
    
-    Object sslPropertiesObj = client.getProperties().get(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES);
-    HTTPSProperties sslProps = null;
-    if ( sslPropertiesObj instanceof HTTPSProperties ) {
-      sslProps = (HTTPSProperties)sslPropertiesObj;
-      assertNull(sslProps.getHostnameVerifier());
-    } else {
-      fail("Unexpected value for https properties object");
-    }
-   }
+  }
   
   @Test
   public void validateSslCertClient_certChainOnlyValidation() throws Exception {
