@@ -28,13 +28,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.onap.aai.restclient.client.OperationResult;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class OperationResultTest {
 
@@ -63,7 +60,7 @@ public class OperationResultTest {
     assertEquals(opResult.getResult(),"no content found");
     assertTrue(opResult.wasSuccessful());
     
-    MultivaluedMap<String,String> multiMap = new MultivaluedMapImpl();
+    MultivaluedMap<String,String> multiMap = new MultivaluedHashMap<>();
     multiMap.add("p1","v1");
     multiMap.add("p2","v2");
     opResult.setHeaders(multiMap);

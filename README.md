@@ -54,7 +54,7 @@ Note, that all of the above configuration parameters are optional and will be se
 ### Querying The A&AI
 Once your service has a client instance, it can query the _Active & Available Inventory_ by specifying an HTTP endpoint, headers, and the expected response format:
 
-	MultivaluedMap<String, String> headers = new MultivaluedMapImpl();
+	MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
 	headers.put("Accept", Arrays.asList(new String[]{"application/json"}));
 	headers.put("X-FromAppId", Arrays.asList(new String[]{"APP-ID"}));
 	headers.put("X-TransactionId", Arrays.asList(new String[]{UUID.randomUUID().toString()}));
