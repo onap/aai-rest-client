@@ -1,8 +1,8 @@
 /*
  * ============LICENSE_START===========================================================================================
  * Copyright (c) 2017 AT&T Intellectual Property.
- * Copyright (c) 2017 Amdocs 
- * Modification Copyright (c) 2018 IBM. 
+ * Copyright (c) 2017 Amdocs
+ * Modification Copyright (c) 2018 IBM.
  * All rights reserved.
  * =====================================================================================================================
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -14,7 +14,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  * ============LICENSE_END================================================== ===========================================
- * 
+ *
  * ECOMP and OpenECOMP are trademarks and service marks of AT&T Intellectual Property.
  */
 package org.onap.aai.restclient.client;
@@ -24,63 +24,59 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.onap.aai.restclient.client.OperationResult;
-import org.onap.aai.restclient.client.RestClient;
 import org.onap.aai.restclient.enums.RestAuthenticationMode;
 import org.onap.aai.restclient.rest.RestClientBuilder;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class RestfulClientTest {
 
     private static final String TEST_URL = "http://localhost:9000/aai/v7";
 
-    private final MultivaluedMapImpl emptyMap = new MultivaluedMapImpl();
+    private final MultivaluedMap<String, String> emptyMap = new MultivaluedHashMap<>();
 
     private RestClientBuilder mockClientBuilder;
     private Client mockedClient;
-    private WebResource mockedWebResource;
+    private WebTarget mockedWebTarget;
     private Builder mockedBuilder;
-    private ClientResponse mockedClientResponse;
+    private Response mockedClientResponse;
 
     /**
      * Test case initialization
-     * 
+     *
      * @throws Exception the exception
      */
-    @SuppressWarnings("unchecked")
     @Before
     public void init() throws Exception {
-        mockedClientResponse = Mockito.mock(ClientResponse.class);
+        mockedClientResponse = Mockito.mock(Response.class);
         setResponseStatus(Response.Status.OK);
-        Mockito.when(mockedClientResponse.getHeaders()).thenReturn(emptyMap);
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("hello");
+        Mockito.when(mockedClientResponse.getHeaders()).thenReturn(new MultivaluedHashMap<>());
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenReturn("hello");
 
         mockedBuilder = Mockito.mock(Builder.class);
-        Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-        Mockito.when(mockedBuilder.post(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-        Mockito.when(mockedBuilder.put(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
-        Mockito.when(mockedBuilder.delete(Mockito.any(Class.class))).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.get()).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.post(Mockito.any())).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.put(Mockito.any())).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.delete()).thenReturn(mockedClientResponse);
         Mockito.when(mockedBuilder.head()).thenReturn(mockedClientResponse);
+        Mockito.when(mockedBuilder.accept(Mockito.any(MediaType.class))).thenReturn(mockedBuilder);
 
-        mockedWebResource = Mockito.mock(WebResource.class);
-        Mockito.when(mockedWebResource.accept(Mockito.<MediaType>anyVararg())).thenReturn(mockedBuilder);
+        mockedWebTarget = Mockito.mock(WebTarget.class);
+        Mockito.when(mockedWebTarget.request()).thenReturn(mockedBuilder);
 
         mockedClient = Mockito.mock(Client.class);
-        Mockito.when(mockedClient.resource(Mockito.anyString())).thenReturn(mockedWebResource);
+        Mockito.when(mockedClient.target(Mockito.anyString())).thenReturn(mockedWebTarget);
 
         mockClientBuilder = Mockito.mock(RestClientBuilder.class);
         Mockito.when(mockClientBuilder.getClient()).thenReturn(mockedClient);
@@ -170,24 +166,24 @@ public class RestfulClientTest {
         assertNull(result.getResult());
         assertNull(result.getFailureCause());
     }
-    
+
     @Test
     public void validateSuccessfulPost_withMultivaluedHeader() throws Exception {
         RestClient restClient = buildClient();
 
-        MultivaluedMapImpl headerMap = new MultivaluedMapImpl();
-        
+        MultivaluedMap<String, String> headerMap = new MultivaluedHashMap<>();
+
         headerMap.add("txnId", "123");
         headerMap.add("txnId", "456");
         headerMap.add("txnId", "789");
 
         OperationResult result = restClient.post(TEST_URL, "", headerMap, MediaType.APPLICATION_JSON_TYPE,
-            MediaType.APPLICATION_JSON_TYPE);
+                MediaType.APPLICATION_JSON_TYPE);
 
-        // capture the txnId header from the outgoing request  
+        // capture the txnId header from the outgoing request
         ArgumentCaptor<String> txnIdHeaderName = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> txnIdHeaderValue = ArgumentCaptor.forClass(String.class);
-        
+
         Mockito.verify(mockedBuilder, Mockito.atLeast(1)).header(txnIdHeaderName.capture(), txnIdHeaderValue.capture());
         assertEquals("123;456;789", txnIdHeaderValue.getValue());
 
@@ -220,7 +216,7 @@ public class RestfulClientTest {
     @Test
     public void validateResourceNotFoundGet() throws Exception {
         setResponseStatus(Response.Status.NOT_FOUND);
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("RNF");
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenReturn("RNF");
 
         OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
 
@@ -249,7 +245,7 @@ public class RestfulClientTest {
 
     @Test
     public void validateHealthCheckFailureWithThrownException() throws Exception {
-        Mockito.when(mockedBuilder.get(Mockito.any(Class.class))).thenThrow(new IllegalArgumentException("error"));
+        Mockito.when(mockedBuilder.get()).thenThrow(new IllegalArgumentException("error"));
 
         boolean targetServiceHealthy =
                 buildClient().healthCheck("http://localhost:9000/aai/util/echo", "startSerice", "targetService");
@@ -260,7 +256,7 @@ public class RestfulClientTest {
     @Test
     public void validateSuccessfulGetWithRetries() throws Exception {
         Mockito.when(mockedClientResponse.getStatus()).thenReturn(408).thenReturn(Response.Status.OK.getStatusCode());
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenReturn("error").thenReturn("ok");
 
         OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
 
@@ -273,7 +269,7 @@ public class RestfulClientTest {
     @Test
     public void validateFailedGetWithRetriesCausedByResourceNotFound() throws Exception {
         setResponseStatus(Response.Status.NOT_FOUND);
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error").thenReturn("ok");
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenReturn("error").thenReturn("ok");
 
         OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
 
@@ -286,7 +282,7 @@ public class RestfulClientTest {
     @Test
     public void validateFailedGetAfterMaxRetries() throws Exception {
         setResponseStatus(Response.Status.INTERNAL_SERVER_ERROR);
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenReturn("error");
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenReturn("error");
 
         OperationResult result = buildClient().get(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE, 3);
 
@@ -315,7 +311,6 @@ public class RestfulClientTest {
         assertNull(result.getFailureCause());
     }
 
-
     @Test
     public void validateSuccessfulHead() throws Exception {
         OperationResult result = buildClient().head(TEST_URL, emptyMap, MediaType.APPLICATION_JSON_TYPE);
@@ -323,7 +318,6 @@ public class RestfulClientTest {
         assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
         assertNotNull(result.getResult());
         assertNull(result.getFailureCause());
-
     }
 
     @Test
@@ -335,12 +329,11 @@ public class RestfulClientTest {
         assertEquals(Response.Status.OK.getStatusCode(), result.getResultCode());
         assertNotNull(result.getResult());
         assertNull(result.getFailureCause());
-
     }
 
     @Test
     public void testGetClient() throws Exception {
-        RestClientBuilder restClientBuilder= new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder();
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_BASIC);
         restClientBuilder.setTruststoreFilename("truststore");
         assertTrue(restClientBuilder.getClient() instanceof Client);
@@ -348,7 +341,7 @@ public class RestfulClientTest {
 
     /**
      * Specify the status code of the response object returned by the mocked client
-     * 
+     *
      * @param status object storing the status code to mock in the ClientResponse
      */
     private void setResponseStatus(Status status) {
@@ -360,9 +353,9 @@ public class RestfulClientTest {
      */
     private void setResponseToNoContent() {
         setResponseStatus(Response.Status.NO_CONTENT);
-        // The Jersey client throws an exception when getEntity() is called following a 204 response
-        UniformInterfaceException uniformInterfaceException = new UniformInterfaceException(mockedClientResponse);
-        Mockito.when(mockedClientResponse.getEntity(String.class)).thenThrow(uniformInterfaceException);
+        // The Jersey client throws an exception when readEntity() is called following a 204 response
+        ProcessingException processingException = new ProcessingException("No content");
+        Mockito.when(mockedClientResponse.readEntity(String.class)).thenThrow(processingException);
     }
 
     /**
