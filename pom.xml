@@ -30,7 +30,7 @@
 
     <groupId>org.onap.aai</groupId>
     <artifactId>rest-client</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <name>aai-rest-client</name>
 
     <properties>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.onap.aai.logging-service</groupId>
             <artifactId>common-logging</artifactId>
-            <version>1.2.2</version>
+            <version>1.5.0</version>
         </dependency>
 
         <dependency>
