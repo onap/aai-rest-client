@@ -35,14 +35,8 @@
 
     <properties>
         <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
-        <!-- Sonar Properties -->
-        <sonar.language>java</sonar.language>
-        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.surefire.reportsPath>${project.build.directory}/surefire-reports</sonar.surefire.reportsPath>
-        <sonar.jacoco.reportPath>${project.build.directory}/code-coverage/jacoco-ut.exec</sonar.jacoco.reportPath>
-        <sonar.jacoco.reportMissing.force.zero>false</sonar.jacoco.reportMissing.force.zero>
-        <sonar.projectVersion>${project.version}</sonar.projectVersion>
-        <jacoco.line.coverage.limit>0.84</jacoco.line.coverage.limit>
+        <jacoco.report.directory>${project.build.directory}/code-coverage</jacoco.report.directory>
+        <jacoco.line.coverage.limit>0.80</jacoco.line.coverage.limit>
     </properties>
 
     <dependencies>
@@ -152,40 +146,26 @@
                     </execution>
                 </executions>
             </plugin>
-	    <plugin>
-	      <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-deploy-plugin</artifactId>
-            </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.2</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.7.201606060606</version>
                 <configuration>
-                     <dumpOnExit>true</dumpOnExit>
+                    <excludes>
+                        <exclude>org/onap/aai/babel/xml/generator/xsd/*</exclude>
+                    </excludes>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>jacoco-initialize-unit-tests</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                        <configuration>
-                            <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
-                            <!-- <append>true</append> -->
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>default-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <dataFile>${project.build.directory}/code-coverage/jacoco-ut.exec</dataFile>
+                            <dataFile>${jacoco.report.directory}/jacoco-ut.exec</dataFile>
                             <rules>
                                 <!--  implementation is needed only for Maven 2  -->
                                 <rule implementation="org.jacoco.maven.RuleConfiguration">
@@ -203,7 +183,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
