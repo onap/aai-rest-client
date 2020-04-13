@@ -30,7 +30,7 @@
 
     <groupId>org.onap.aai</groupId>
     <artifactId>rest-client</artifactId>
-    <version>1.6.4-SNAPSHOT</version>
+    <version>1.6.4</version>
     <name>aai-rest-client</name>
 
     <properties>
