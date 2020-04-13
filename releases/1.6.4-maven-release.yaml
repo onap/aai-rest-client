@@ -1,0 +1,4 @@
+distribution_type: maven
+log_dir: aai-rest-client-maven-stage-frankfurt/5/
+project: aai-rest-client
+version: 1.6.4
