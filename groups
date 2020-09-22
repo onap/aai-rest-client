@@ -2,4 +2,3 @@
 #
 7a244ede137e96668d1146205f7a984165b85438                                        	saml/onap-gerrit-aai-rest-client-committers
 daebbf523be390041a1a9c0e340a6d833aae5043                                        	GitHub Replication
-ldap:cn=onap-gerrit-aai-rest-client-committers,ou=Groups,dc=freestandards,dc=org	ldap/onap-gerrit-aai-rest-client-committers
