@@ -31,6 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
@@ -39,15 +40,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import org.onap.aai.cl.api.LogFields;
+
 import org.onap.aai.cl.api.LogLine;
-import org.onap.aai.cl.api.Logger;
-import org.onap.aai.cl.eelf.LoggerFactory;
 import org.onap.aai.cl.mdc.MdcContext;
 import org.onap.aai.cl.mdc.MdcOverride;
 import org.onap.aai.restclient.enums.RestAuthenticationMode;
 import org.onap.aai.restclient.logging.RestClientMsgs;
 import org.onap.aai.restclient.rest.RestClientBuilder;
+
+import com.att.eelf.configuration.EELFLogger;
+import com.att.eelf.configuration.EELFManager;
 
 
 
@@ -69,11 +71,10 @@ public class RestClient {
     private static final String REST_CLIENT_INSTANCE = "REST_CLIENT_INSTANCE";
 
     /** Standard logger for producing log statements. */
-    private Logger logger = LoggerFactory.getInstance().getLogger("AAIRESTClient");
+    private static EELFLogger logger = EELFManager.getLogger(RestClient.class.getName());
 
     /** Standard logger for producing metric statements. */
-    private Logger metricsLogger = LoggerFactory.getInstance().getMetricsLogger("AAIRESTClient");
-
+    private static EELFLogger metricsLogger = EELFManager.getMetricsLogger();
     private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     /** Reusable function call for GET REST operations. */
@@ -389,12 +390,11 @@ public class RestClient {
             if (responseStatus != null) {
                 responseStatusCodeString = responseStatus.toString();
             }
-
-            metricsLogger.info(RestClientMsgs.HTTP_REQUEST_TIME,
-                    new LogFields().setField(LogLine.DefinedFields.STATUS_CODE, responseStatusCodeString)
-                            .setField(LogLine.DefinedFields.RESPONSE_CODE, operationResult.getResultCode())
-                            .setField(LogLine.DefinedFields.RESPONSE_DESCRIPTION, operationResult.getResult()),
-                    override, requestType, Long.toString(System.currentTimeMillis() - startTimeInMs), url);
+            Map<String, String> logFields = new HashMap<String, String>();
+            logFields.put(LogLine.DefinedFields.STATUS_CODE.name(), responseStatusCodeString);
+            logFields.put(LogLine.DefinedFields.RESPONSE_CODE.name(), String.valueOf(operationResult.getResultCode()));
+            logFields.put(LogLine.DefinedFields.RESPONSE_DESCRIPTION.name(), operationResult.getResult());
+            metricsLogger.info(RestClientMsgs.HTTP_REQUEST_TIME, logFields.toString(), requestType, Long.toString(System.currentTimeMillis() - startTimeInMs), url);
             logger.info(RestClientMsgs.HTTP_REQUEST_TIME, requestType,
                     Long.toString(System.currentTimeMillis() - startTimeInMs), url);
             logger.info(RestClientMsgs.HTTP_RESPONSE, url,
