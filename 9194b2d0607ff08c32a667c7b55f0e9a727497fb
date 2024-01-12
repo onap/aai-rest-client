@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Verified+1: ONAP Required GHA <releng+onap.required.gha@linuxfoundation.org>
+Code-Review+2: Manisha Aggarwal <amanisha@att.com>
+Submitted-by: Manisha Aggarwal <amanisha@att.com>
+Submitted-at: Fri, 12 Jan 2024 16:28:49 +0000
+Reviewed-on: https://gerrit.onap.org/r/c/aai/rest-client/+/136891
+Project: aai/rest-client
+Branch: refs/heads/master
