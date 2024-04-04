@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
@@ -98,8 +99,8 @@ public class RestClient {
     /**
      * Creates a new instance of the {@link RestClient}.
      */
-    public RestClient() {
-        clientBuilder = new RestClientBuilder();
+    public RestClient(ClientBuilder builder) {
+        clientBuilder = new RestClientBuilder(builder);
     }
 
     /**

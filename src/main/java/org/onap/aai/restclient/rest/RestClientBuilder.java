@@ -56,6 +56,8 @@ public class RestClientBuilder {
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String TRUST_STORE_PROPERTY = "javax.net.ssl.trustStore";
 
+    private final ClientBuilder builder;
+
     private boolean validateServerHostname;
     private boolean validateServerCertChain;
     private String clientCertFileName;
@@ -71,7 +73,8 @@ public class RestClientBuilder {
     /**
      * Rest Client Builder.
      */
-    public RestClientBuilder() {
+    public RestClientBuilder(ClientBuilder builder) {
+        this.builder = builder;
         validateServerHostname = DEFAULT_VALIDATE_SERVER_HOST;
         validateServerCertChain = DEFAULT_VALIDATE_CERT_CHAIN;
         clientCertFileName = DEFAULT_CLIENT_CERT_FILENAME;
@@ -239,7 +242,7 @@ public class RestClientBuilder {
     protected Client getClient(boolean useSsl) throws Exception {
 
         // Finally, create and initialize our client...
-        ClientBuilder builder = ClientBuilder.newBuilder();
+        
         if (useSsl) {
             setupSecureSocketLayerClientConfig(builder);
         }

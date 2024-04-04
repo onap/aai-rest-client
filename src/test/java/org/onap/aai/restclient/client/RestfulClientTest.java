@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -45,6 +46,7 @@ public class RestfulClientTest {
     private static final String TEST_URL = "http://localhost:9000/aai/v7";
 
     private final MultivaluedMap<String, String> emptyMap = new MultivaluedHashMap<>();
+    private final ClientBuilder clientBuilder = ClientBuilder.newBuilder();
 
     private RestClientBuilder mockClientBuilder;
     private Client mockedClient;
@@ -84,7 +86,7 @@ public class RestfulClientTest {
 
     @Test
     public void validateConstructors() {
-        RestClient restClient = new RestClient();
+        RestClient restClient = new RestClient(clientBuilder);
         assertNotNull(restClient);
         restClient = new RestClient(mockClientBuilder);
         assertNotNull(restClient);
@@ -333,7 +335,7 @@ public class RestfulClientTest {
 
     @Test
     public void testGetClient() throws Exception {
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_BASIC);
         restClientBuilder.setTruststoreFilename("truststore");
         assertTrue(restClientBuilder.getClient() instanceof Client);

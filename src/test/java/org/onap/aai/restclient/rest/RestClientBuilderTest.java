@@ -28,6 +28,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.onap.aai.restclient.enums.RestAuthenticationMode;
@@ -36,6 +38,8 @@ import org.onap.aai.restclient.enums.RestAuthenticationMode;
  * This suite of tests is intended to exercise the functionality of the generice REST client builder.
  */
 public class RestClientBuilderTest {
+
+    private final ClientBuilder clientBuilder = ClientBuilder.newBuilder();
 
     /**
      * Test case initialization
@@ -53,7 +57,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateAccesors() {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         // test defaults
         assertEquals(restClientBuilder.isValidateServerHostname(), RestClientBuilder.DEFAULT_VALIDATE_SERVER_HOST);
@@ -99,7 +103,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateNoAuthClientCreation() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.HTTP_NOAUTH);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -113,7 +117,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateUnknownModeCreateNoAuthClient() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.UNKNOWN_MODE);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -126,7 +130,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateBasicAuthSslClient() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_BASIC);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -143,7 +147,7 @@ public class RestClientBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void validateSslCertClient_noHostOrCertChainValidation() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -157,7 +161,7 @@ public class RestClientBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void validateSslCertClient_hostOnlyValidation() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -172,7 +176,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateSslCertClient_certChainOnlyValidation() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -191,7 +195,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateSslCertClient_withHostAndCertChainValidation() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -210,7 +214,7 @@ public class RestClientBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void validateSslCertClient_illegalArgumentExceptionWhenTruststoreIsNull() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
 
         restClientBuilder.setAuthenticationMode(RestAuthenticationMode.SSL_CERT);
         restClientBuilder.setConnectTimeoutInMs(12345);
@@ -230,7 +234,7 @@ public class RestClientBuilderTest {
     @Test
     public void validateSslProtocolConfiguration() throws Exception {
 
-        RestClientBuilder restClientBuilder = new RestClientBuilder();
+        RestClientBuilder restClientBuilder = new RestClientBuilder(clientBuilder);
         assertEquals(RestClientBuilder.DEFAULT_SSL_PROTOCOL, restClientBuilder.getSslProtocol());
 
         restClientBuilder.setSslProtocol("TLSv1.2");

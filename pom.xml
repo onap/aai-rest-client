@@ -25,16 +25,15 @@
     <parent>
         <groupId>org.onap.aai.aai-common</groupId>
         <artifactId>aai-parent</artifactId>
-        <version>1.9.4</version>
+        <version>1.11.0</version>
     </parent>
 
     <groupId>org.onap.aai</groupId>
     <artifactId>rest-client</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <name>aai-rest-client</name>
 
     <properties>
-        <aai.common.version>1.9.3</aai.common.version>
         <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
         <jacoco.report.directory>${project.build.directory}/code-coverage</jacoco.report.directory>
         <jacoco.line.coverage.limit>0.80</jacoco.line.coverage.limit>
