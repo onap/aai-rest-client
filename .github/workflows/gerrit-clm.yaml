@@ -284,7 +284,7 @@ jobs:
         if: steps.check-pom-xml.outputs.exists == 'true'
         continue-on-error: true
         # yamllint disable-line rule:line-length
-        uses: lfreleng-actions/maven-build-action@6a687d420895015a60abd139e37ba1ae7e78e8e8 # v0.3.1
+        uses: lfreleng-actions/maven-build-action@3c48aed21aa422b16e1a15f31adbb2331aa59e83 # v0.4.2
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
