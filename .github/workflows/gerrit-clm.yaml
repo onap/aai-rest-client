@@ -160,7 +160,7 @@ jobs:
         # yamllint disable-line rule:line-length
         if: github.event_name == 'workflow_dispatch' && inputs.GERRIT_DISABLED != true
         # yamllint disable-line rule:line-length
-        uses: lfreleng-actions/checkout-gerrit-change-action@f87b90a3370e62dad310797fedc7fd3700c75832 # v1.0.2
+        uses: lfreleng-actions/checkout-gerrit-change-action@35e98c8043ec411611e464e296bcfb441a5c5093 # v1.1.2
         with:
           gerrit-refspec: ${{ inputs.GERRIT_REFSPEC }}
           gerrit-project: ${{ inputs.GERRIT_PROJECT }}
