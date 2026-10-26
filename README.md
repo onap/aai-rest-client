@@ -9,9 +9,9 @@ In order to make the _REST Client_ library available to your microservice, inclu
 
     <!-- Common REST Client Library -->
     <dependency>
-        <groupId>org.openecomp.aai</groupId>
+        <groupId>org.onap.aai</groupId>
         <artifactId>rest-client</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>2.0.0</version>
     </dependency>
     
 ## Code Examples
