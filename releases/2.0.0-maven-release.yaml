@@ -1,0 +1,5 @@
+distribution_type: maven
+log_dir: aai-rest-client-maven-stage-master/1380/
+project: aai-rest-client
+version: 2.0.0
+ref: 7a4a3424215239cd981494c703a8bf5d1ba64dac
